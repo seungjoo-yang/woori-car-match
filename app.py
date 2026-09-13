@@ -213,15 +213,20 @@ def _image_data_uri(path: str) -> str:
     return f"data:image/{mime};base64,{b64}"
 
 
+IMAGE_EXTS = ("jpg", "jpeg", "png", "webp", "avif")
+
+
 def render_car_image(car_id: str, color: dict):
-    """assets/cars/<car_id>/<color_id>.(jpg|jpeg|png|webp) 파일이 있으면 해당 색상 실제 이미지를 그대로,
+    """assets/cars/<car_id>/<color_id>.(jpg|jpeg|png|webp|avif) 파일이 있으면 해당 색상 실제 이미지를 그대로,
     없으면 그 차량의 대표 사진(photo.*)에 선택한 색상을 합성해서, 그마저 없으면 자리표시 이미지를 보여준다."""
-    for ext in ("jpg", "jpeg", "png", "webp"):
+    for ext in IMAGE_EXTS:
         path = os.path.join(ASSETS_DIR, car_id, f"{color['id']}.{ext}")
         if os.path.exists(path):
-            st.image(path, use_container_width=True)
+            uri = _image_data_uri(path)
+            st.markdown(f'<img src="{uri}" style="width:100%;display:block;border-radius:18px;">',
+                        unsafe_allow_html=True)
             return
-    for ext in ("jpg", "jpeg", "png", "webp"):
+    for ext in IMAGE_EXTS:
         path = os.path.join(ASSETS_DIR, car_id, f"photo.{ext}")
         if os.path.exists(path):
             uri = _image_data_uri(path)
