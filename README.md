@@ -44,6 +44,16 @@ assets/cars/ev6/green.jpg
 
 차량 id / 색상 id 목록은 `data.py`의 `NEW_CAR_RECS`를 확인하세요.
 
+## 상담 신청 이메일 발송 설정
+
+마지막 "차량 만나보기" 화면의 상담 신청 폼은 이름/연락처를 입력해 제출하면 지정한 이메일로 신청 내용이 발송됩니다. Gmail 계정과 앱 비밀번호가 필요합니다.
+
+1. Gmail 계정에서 2단계 인증을 켠 뒤, [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) 에서 "앱 비밀번호"를 새로 만듭니다 (16자리).
+2. `.streamlit/secrets.toml.example` 파일을 `.streamlit/secrets.toml` 로 복사하고, `GMAIL_USER`(발신 Gmail 주소), `GMAIL_APP_PASSWORD`(방금 만든 앱 비밀번호), `RECIPIENT_EMAIL`(상담 신청을 받을 이메일)을 채워 넣습니다. 이 파일은 `.gitignore`에 포함되어 있어 GitHub에는 올라가지 않습니다.
+3. **Streamlit Community Cloud에 배포한 경우**: 로컬 파일 대신, 앱 관리 화면(우측 하단 `⋮` → `Settings` → `Secrets`)에 같은 내용을 TOML 형식으로 붙여넣고 저장하면 됩니다. 저장 후 앱이 자동으로 재시작됩니다.
+
+설정 전에는 상담 신청 시 "이메일 발송 기능이 아직 설정되지 않았습니다" 메시지가 뜨고, 설정 후에는 실제로 이메일이 발송됩니다.
+
 ## 데이터 커스터마이징
 
 - `USED_CAR_DB` : 보유 차량(중고차) 브랜드/모델/연식별 시세 — 신차가 기준 감가율로 자동 계산됩니다.

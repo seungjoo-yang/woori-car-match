@@ -3,6 +3,9 @@
 우리금융캐피탈 - 나에게 맞는 차량 찾기 (체험형 데모)
 """
 import os
+import smtplib
+from email.mime.text import MIMEText
+
 import streamlit as st
 
 import data
@@ -245,6 +248,42 @@ def disclaimer():
     )
 
 
+def send_consultation_email(payload: dict):
+    """상담 신청 내용을 이메일로 발송한다. Streamlit Secrets(GMAIL_USER, GMAIL_APP_PASSWORD)가
+    설정되어 있어야 동작하며, 없으면 (False, 안내 메시지)를 반환한다."""
+    try:
+        gmail_user = st.secrets["GMAIL_USER"]
+        gmail_pass = st.secrets["GMAIL_APP_PASSWORD"]
+        recipient = st.secrets.get("RECIPIENT_EMAIL", gmail_user)
+    except Exception:
+        return False, "이메일 발송 기능이 아직 설정되지 않았습니다. (관리자: Streamlit Secrets에 GMAIL_USER / GMAIL_APP_PASSWORD 설정 필요)"
+
+    body = "\n".join([
+        f"신청자: {payload['name']} ({payload['phone']})",
+        "",
+        f"관심 차량: {payload['car_brand']} {payload['car_model']} - {payload['color_name']}",
+        f"트림: {payload['trim_name']} / 휠: {payload['wheel_name']}",
+        f"금융조건: {payload['finance_name']} · {payload['term']}개월",
+        f"총 차량 가격: {payload['total_price']}",
+        f"예상 월 납부금: {payload['monthly']}",
+        "",
+        f"하차예정(보유) 차량: {payload['used_brand']} {payload['used_model']} ({payload['used_year']}년)",
+        f"예상 보상판매가: {payload['used_price']}",
+    ])
+    msg = MIMEText(body)
+    msg["Subject"] = f"[차량매칭 체험존] 상담신청 - {payload['car_brand']} {payload['car_model']}"
+    msg["From"] = gmail_user
+    msg["To"] = recipient
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
+            server.login(gmail_user, gmail_pass)
+            server.sendmail(gmail_user, [recipient], msg.as_string())
+        return True, "상담 신청이 접수되어 담당자에게 이메일로 전달되었습니다."
+    except Exception as e:
+        return False, f"이메일 발송 중 오류가 발생했습니다: {e}"
+
+
 # ---------------------------------------------------------------------------
 # STEP 0: 인트로
 # ---------------------------------------------------------------------------
@@ -450,6 +489,32 @@ def render_detail():
     st.markdown(f"#### 🚗 {car['brand']} {car['model']}")
     st.caption(car["desc"])
 
+    with st.expander("🔁 추천 차량 · 금융조건 다시 선택하기"):
+        recs = data.recommend_cars(st.session_state.q1, st.session_state.q2, st.session_state.q3, top_n=3)
+        st.markdown("**추천 차량**")
+        rcols = st.columns(3)
+        for i, rc in enumerate(recs):
+            is_sel = st.session_state.selected_car_id == rc["id"]
+            label = f"{rc['brand']} {rc['model']}" + (" ✅" if is_sel else "")
+            if rcols[i].button(label, key=f"detail_pick_{rc['id']}",
+                                type="primary" if is_sel else "secondary", use_container_width=True):
+                if st.session_state.selected_car_id != rc["id"]:
+                    st.session_state.selected_car_id = rc["id"]
+                    st.session_state.selected_color_idx = 0
+                    st.session_state.selected_trim_id = "standard"
+                    st.session_state.selected_wheel_id = "18in"
+                    st.rerun()
+
+        st.markdown("**금융조건**")
+        fcols = st.columns(3)
+        for i, fo in enumerate(data.FINANCE_OPTIONS):
+            is_sel = st.session_state.finance_id == fo["id"]
+            label = f"{fo['icon']} {fo['name']}" + (" ✅" if is_sel else "")
+            if fcols[i].button(label, key=f"detail_fin_{fo['id']}",
+                                type="primary" if is_sel else "secondary", use_container_width=True):
+                st.session_state.finance_id = fo["id"]
+                st.rerun()
+
     colors = car["colors"]
     color_names = [c["name"] for c in colors]
     idx = min(st.session_state.selected_color_idx, len(colors) - 1)
@@ -509,12 +574,41 @@ def render_detail():
         unsafe_allow_html=True,
     )
 
-    c1, c2 = st.columns([1, 3])
-    if c1.button("← 추천 결과로", use_container_width=True):
+    st.write("")
+    st.markdown("##### 📩 상담 신청하기")
+    with st.form("consult_form", clear_on_submit=True):
+        name = st.text_input("이름")
+        phone = st.text_input("연락처 (휴대폰 번호)", placeholder="010-0000-0000")
+        submitted = st.form_submit_button("상담 신청하기", type="primary", use_container_width=True)
+        if submitted:
+            if not name.strip() or not phone.strip():
+                st.warning("이름과 연락처를 입력해 주세요.")
+            else:
+                payload = {
+                    "name": name.strip(),
+                    "phone": phone.strip(),
+                    "car_brand": car["brand"],
+                    "car_model": car["model"],
+                    "color_name": color["name"],
+                    "trim_name": trim["name"],
+                    "wheel_name": wheel["name"],
+                    "finance_name": finance_name,
+                    "term": st.session_state.term_months,
+                    "total_price": data.fmt_10k(total_price),
+                    "monthly": f"월 {data.fmt_10k(monthly)}",
+                    "used_brand": st.session_state.used_brand,
+                    "used_model": st.session_state.used_model,
+                    "used_year": st.session_state.used_year,
+                    "used_price": data.fmt_10k(used_price),
+                }
+                ok, result_msg = send_consultation_email(payload)
+                if ok:
+                    st.success(result_msg)
+                else:
+                    st.error(result_msg)
+
+    if st.button("← 추천 결과로", use_container_width=True):
         go(4)
-    if c2.button("📩 상담 신청하기 (데모)", type="primary", use_container_width=True):
-        st.success(f"{car['brand']} {car['model']} ({color['name']}) 상담 신청이 접수된 것으로 표시됩니다. "
-                   "(실제 접수는 연동되지 않은 체험용 화면입니다)")
 
     st.write("")
     if st.button("🔁 처음부터 다시 하기", use_container_width=True):
