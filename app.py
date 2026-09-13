@@ -2,6 +2,7 @@
 """
 우리금융캐피탈 - 나에게 맞는 차량 찾기 (체험형 데모)
 """
+import base64
 import os
 import smtplib
 from email.mime.text import MIMEText
@@ -204,9 +205,17 @@ def car_placeholder_svg(hex_color: str) -> str:
     return "".join(parts)
 
 
+def _image_data_uri(path: str) -> str:
+    ext = os.path.splitext(path)[1].lstrip(".").lower()
+    mime = "jpeg" if ext == "jpg" else ext
+    with open(path, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode("ascii")
+    return f"data:image/{mime};base64,{b64}"
+
+
 def render_car_image(car_id: str, color: dict):
-    """assets/cars/<car_id>/<color_id>.(jpg|jpeg|png|webp) 파일이 있으면 해당 색상 실제 이미지를,
-    없으면 그 차량의 대표 사진(photo.*)을, 그마저 없으면 색상이 반영된 자리표시 이미지를 보여준다."""
+    """assets/cars/<car_id>/<color_id>.(jpg|jpeg|png|webp) 파일이 있으면 해당 색상 실제 이미지를 그대로,
+    없으면 그 차량의 대표 사진(photo.*)에 선택한 색상을 합성해서, 그마저 없으면 자리표시 이미지를 보여준다."""
     for ext in ("jpg", "jpeg", "png", "webp"):
         path = os.path.join(ASSETS_DIR, car_id, f"{color['id']}.{ext}")
         if os.path.exists(path):
@@ -215,8 +224,23 @@ def render_car_image(car_id: str, color: dict):
     for ext in ("jpg", "jpeg", "png", "webp"):
         path = os.path.join(ASSETS_DIR, car_id, f"photo.{ext}")
         if os.path.exists(path):
-            st.image(path, use_container_width=True)
-            st.caption("* 예시 이미지이며 실제 선택하신 색상과 다를 수 있습니다.")
+            uri = _image_data_uri(path)
+            html = (
+                '<div style="position:relative;border-radius:18px;overflow:hidden;">'
+                f'<img src="{uri}" style="width:100%;display:block;">'
+                f'<div style="position:absolute;inset:0;background:{color["hex"]};'
+                'opacity:0.4;mix-blend-mode:color;"></div>'
+                '<div style="position:absolute;top:14px;left:14px;display:flex;align-items:center;'
+                'gap:8px;background:rgba(255,255,255,0.92);padding:6px 14px 6px 6px;border-radius:999px;'
+                'box-shadow:0 2px 10px rgba(0,0,0,0.25);">'
+                f'<span style="width:26px;height:26px;border-radius:50%;background:{color["hex"]};'
+                'display:inline-block;border:2px solid white;box-shadow:0 0 0 1px rgba(0,0,0,0.15);"></span>'
+                f'<span style="font-size:0.85rem;font-weight:700;color:#222;">{color["name"]}</span>'
+                "</div>"
+                "</div>"
+            )
+            st.markdown(html, unsafe_allow_html=True)
+            st.caption("* 예시 사진에 선택하신 색상을 합성한 이미지이며, 실제 색상과 다를 수 있습니다.")
             return
     svg = car_placeholder_svg(color["hex"])
     html = f'<div style="background:#f5f7fa;border-radius:18px;padding:1.2rem;">{svg}</div>'
@@ -387,20 +411,18 @@ def render_finance():
     header()
     progress_bar(2)
     st.markdown("#### 💳 원하시는 금융조건을 선택해 주세요")
+    st.caption("카드를 누르면 바로 선택됩니다")
     st.write("")
 
     for opt in data.FINANCE_OPTIONS:
         is_sel = st.session_state.finance_id == opt["id"]
-        with st.container():
-            st.markdown(f'<div class="car-card{" selected" if is_sel else ""}">', unsafe_allow_html=True)
-            cols = st.columns([1, 5])
-            cols[0].markdown(f"<div style='font-size:2rem;'>{opt['icon']}</div>", unsafe_allow_html=True)
-            cols[1].markdown(f"**{opt['name']}** — {opt['summary']}\n\n{opt['desc']}")
-            if st.button(f"{opt['name']} 선택" + (" ✅" if is_sel else ""), key=f"fin_{opt['id']}",
-                         type="primary" if is_sel else "secondary", use_container_width=True):
-                st.session_state.finance_id = opt["id"]
-                st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
+        check = " ✅" if is_sel else ""
+        label = f"{opt['icon']} **{opt['name']}**{check} — {opt['summary']}\n\n{opt['desc']}"
+        if st.button(label, key=f"fin_{opt['id']}", type="primary" if is_sel else "secondary",
+                     use_container_width=True):
+            st.session_state.finance_id = opt["id"]
+            st.rerun()
+        st.write("")
 
     st.write("")
     c1, c2 = st.columns([1, 3])
@@ -432,15 +454,15 @@ def render_result():
     for i, car in enumerate(recs):
         is_sel = st.session_state.selected_car_id == car["id"]
         badge = "🏆 BEST MATCH" if i == 0 else f"추천 {i + 1}"
-        st.markdown(f'<div class="car-card{" selected" if is_sel else ""}">', unsafe_allow_html=True)
-        st.markdown(f'<span class="badge">{badge}</span>', unsafe_allow_html=True)
-        st.markdown(f"**{car['brand']} {car['model']}** · {car['segment']} · {data.fmt_10k(car['price'])}")
-        st.write(car["tagline"])
-        if st.button("이 차량 선택" + (" ✅" if is_sel else ""), key=f"pick_{car['id']}",
-                     type="primary" if is_sel else "secondary", use_container_width=True):
+        check = " ✅" if is_sel else ""
+        label = (f"{badge}{check}\n\n"
+                 f"**{car['brand']} {car['model']}** · {car['segment']} · {data.fmt_10k(car['price'])}\n\n"
+                 f"{car['tagline']}")
+        if st.button(label, key=f"pick_{car['id']}", type="primary" if is_sel else "secondary",
+                     use_container_width=True):
             st.session_state.selected_car_id = car["id"]
             st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.write("")
 
     selected_car = data.get_car_by_id(st.session_state.selected_car_id)
 
@@ -567,6 +589,8 @@ def render_detail():
             <div class="price-row"><span>차량 기본가</span><span>{data.fmt_10k(car['price'])}</span></div>
             <div class="price-row"><span>트림 · 휠 추가금</span><span>+{data.fmt_10k(trim['price_delta'] + wheel['price_delta'])}</span></div>
             <div class="price-row"><span>총 차량 가격</span><span>{data.fmt_10k(total_price)}</span></div>
+            <div class="price-row"><span>보유 차량 보상판매가 (−)</span><span>-{data.fmt_10k(used_price)}</span></div>
+            <div class="price-row"><span>실 부담 금액</span><span>{data.fmt_10k(principal)}</span></div>
             <div class="price-row"><span>금융조건</span><span>{finance_name} · {st.session_state.term_months}개월</span></div>
             <div class="price-row total"><span>예상 월 납부금</span><span>월 {data.fmt_10k(monthly)}</span></div>
         </div>
