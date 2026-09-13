@@ -148,6 +148,8 @@ NEW_CAR_RECS = [
             {"id": "white", "name": "아틀라스화이트", "hex": "#f2f2f2"},
             {"id": "gray", "name": "티타늄그레이", "hex": "#6e7278"},
             {"id": "blue", "name": "갤럭시그레이블루", "hex": "#3b4a5a"},
+            {"id": "green", "name": "포레스트그린", "hex": "#33422f"},
+            {"id": "beige", "name": "어스베이지", "hex": "#cabfa4"},
         ],
         "scores": {"q1": [3, 1, 0, 1], "q2": [0, 1, 3, 1], "q3": [1, 3, 1, 1]},
     },
@@ -164,6 +166,8 @@ NEW_CAR_RECS = [
             {"id": "white", "name": "스노우화이트펄", "hex": "#f5f5f5"},
             {"id": "gray", "name": "인터스텔라그레이", "hex": "#54565a"},
             {"id": "yellow", "name": "루나옐로우", "hex": "#d8c23a"},
+            {"id": "black", "name": "오로라블랙펄", "hex": "#131313"},
+            {"id": "red", "name": "루비레드", "hex": "#7a1f2b"},
         ],
         "scores": {"q1": [2, 3, 0, 1], "q2": [0, 1, 3, 1], "q3": [1, 3, 1, 1]},
     },
@@ -180,6 +184,8 @@ NEW_CAR_RECS = [
             {"id": "beige", "name": "카타르 베이지", "hex": "#cdbfa5"},
             {"id": "green", "name": "발할라 그린", "hex": "#33402f"},
             {"id": "silver", "name": "빌라 화이트", "hex": "#e6e6e6"},
+            {"id": "blue", "name": "모나코 블루", "hex": "#1f3350"},
+            {"id": "brown", "name": "브라운스톤", "hex": "#5a4436"},
         ],
         "scores": {"q1": [1, 3, 1, 2], "q2": [1, 2, 1, 2], "q3": [2, 2, 2, 1]},
     },
@@ -196,6 +202,8 @@ NEW_CAR_RECS = [
             {"id": "white", "name": "크리에이티브화이트", "hex": "#f4f4f2"},
             {"id": "green", "name": "매트그린", "hex": "#4b5b45"},
             {"id": "gray", "name": "쉐도우그레이", "hex": "#5c5f61"},
+            {"id": "blue", "name": "인텐스블루", "hex": "#233a5c"},
+            {"id": "red", "name": "가넷레드", "hex": "#7a2a2a"},
         ],
         "scores": {"q1": [0, 1, 3, 1], "q2": [1, 3, 1, 2], "q3": [3, 1, 0, 2]},
     },
@@ -212,6 +220,8 @@ NEW_CAR_RECS = [
             {"id": "white", "name": "스노우화이트펄", "hex": "#f6f6f6"},
             {"id": "brown", "name": "테라코타", "hex": "#8a4b36"},
             {"id": "silver", "name": "실키실버", "hex": "#b9bbbd"},
+            {"id": "blue", "name": "미네랄블루", "hex": "#324a5c"},
+            {"id": "green", "name": "포레스트그린", "hex": "#3a4a3a"},
         ],
         "scores": {"q1": [0, 1, 3, 1], "q2": [0, 1, 1, 3], "q3": [3, 1, 0, 2]},
     },
@@ -228,6 +238,8 @@ NEW_CAR_RECS = [
             {"id": "black", "name": "어비스블랙펄", "hex": "#1a1a1a"},
             {"id": "blue", "name": "인텐스블루", "hex": "#1f3f6e"},
             {"id": "red", "name": "엔진레드", "hex": "#9c2b2b"},
+            {"id": "gray", "name": "어비스그레이", "hex": "#5c5f61"},
+            {"id": "green", "name": "리트리버그린", "hex": "#4a5c47"},
         ],
         "scores": {"q1": [0, 0, 3, 0], "q2": [3, 1, 0, 0], "q3": [0, 0, 0, 3]},
     },
@@ -240,10 +252,12 @@ NEW_CAR_RECS = [
         "tagline": "세단의 실용성과 스포츠카의 심장",
         "desc": "고성능 터보 엔진과 스포티한 디자인으로 운전의 재미를 더한 중형 세단.",
         "colors": [
-            {"id": "red", "name": "스노우 화이트 펄", "hex": "#8f1d1d"},
+            {"id": "red", "name": "레드 펄", "hex": "#8f1d1d"},
             {"id": "black", "name": "오로라 블랙 펄", "hex": "#141414"},
             {"id": "gray", "name": "스틸 그레이", "hex": "#606366"},
             {"id": "white", "name": "글레이셔 화이트", "hex": "#eeeeee"},
+            {"id": "blue", "name": "마이크로 블루 펄", "hex": "#1f3a5c"},
+            {"id": "silver", "name": "실버", "hex": "#b7b9bb"},
         ],
         "scores": {"q1": [1, 1, 0, 3], "q2": [3, 0, 0, 1], "q3": [0, 1, 3, 1]},
     },
@@ -260,6 +274,8 @@ NEW_CAR_RECS = [
             {"id": "blue", "name": "포르투 블루", "hex": "#1f4160"},
             {"id": "gray", "name": "미네랄 그레이", "hex": "#4d4f52"},
             {"id": "white", "name": "알파인 화이트", "hex": "#f1f1f1"},
+            {"id": "red", "name": "멜버른 레드", "hex": "#7a1f1f"},
+            {"id": "green", "name": "브리티시 레이싱 그린", "hex": "#1f3a2a"},
         ],
         "scores": {"q1": [1, 1, 0, 3], "q2": [1, 0, 1, 2], "q3": [1, 1, 3, 0]},
     },
@@ -276,6 +292,8 @@ NEW_CAR_RECS = [
             {"id": "beige", "name": "카타르 베이지", "hex": "#cdbfa5"},
             {"id": "silver", "name": "세르파 실버", "hex": "#b6b8ba"},
             {"id": "blue", "name": "딥 블루", "hex": "#22344f"},
+            {"id": "green", "name": "팬텀 그린", "hex": "#33402f"},
+            {"id": "white", "name": "유니버스 화이트", "hex": "#f0f0f0"},
         ],
         "scores": {"q1": [1, 3, 1, 1], "q2": [1, 3, 0, 1], "q3": [3, 1, 1, 0]},
     },
@@ -292,10 +310,46 @@ NEW_CAR_RECS = [
             {"id": "white", "name": "아틀라스 화이트", "hex": "#f2f2f2"},
             {"id": "green", "name": "미스틱 그린", "hex": "#3f5b4a"},
             {"id": "black", "name": "어비스 블랙", "hex": "#1a1a1a"},
+            {"id": "blue", "name": "오로라 블루", "hex": "#25405c"},
+            {"id": "pink", "name": "코랄 핑크", "hex": "#c96b6b"},
         ],
         "scores": {"q1": [1, 0, 3, 0], "q2": [3, 1, 0, 0], "q3": [0, 0, 0, 3]},
     },
 ]
+
+
+# ---------------------------------------------------------------------------
+# 3-1) 트림(등급) 옵션 - 색상 외 추가 선택 옵션
+# ---------------------------------------------------------------------------
+
+TRIM_LEVELS = [
+    {"id": "standard", "name": "스탠다드", "price_delta": 0,
+     "desc": "기본 안전·편의 사양 (스마트 크루즈, 후방카메라, 공조 자동화)"},
+    {"id": "premium", "name": "프리미엄", "price_delta": 180,
+     "desc": "스탠다드 + 통풍시트, 헤드업 디스플레이, 프리미엄 오디오"},
+    {"id": "top", "name": "최상위", "price_delta": 340,
+     "desc": "프리미엄 + 대형 휠, 서라운드 뷰 모니터, 첨단 주행보조 풀패키지"},
+]
+
+WHEEL_OPTIONS = [
+    {"id": "18in", "name": "18인치 알로이 휠", "price_delta": 0},
+    {"id": "19in", "name": "19인치 스포츠 휠", "price_delta": 40},
+    {"id": "20in", "name": "20인치 대형 휠", "price_delta": 70},
+]
+
+
+def get_trim(trim_id: str):
+    for t in TRIM_LEVELS:
+        if t["id"] == trim_id:
+            return t
+    return TRIM_LEVELS[0]
+
+
+def get_wheel(wheel_id: str):
+    for w in WHEEL_OPTIONS:
+        if w["id"] == wheel_id:
+            return w
+    return WHEEL_OPTIONS[0]
 
 
 def recommend_cars(q1_idx: int, q2_idx: int, q3_idx: int, top_n: int = 3):

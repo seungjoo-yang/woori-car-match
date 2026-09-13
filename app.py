@@ -122,6 +122,8 @@ defaults = {
     "term_months": data.DEFAULT_TERM_MONTHS,
     "selected_car_id": None,
     "selected_color_idx": 0,
+    "selected_trim_id": "standard",
+    "selected_wheel_id": "18in",
 }
 for k, v in defaults.items():
     if k not in st.session_state:
@@ -200,12 +202,18 @@ def car_placeholder_svg(hex_color: str) -> str:
 
 
 def render_car_image(car_id: str, color: dict):
-    """assets/cars/<car_id>/<color_id>.(jpg|jpeg|png|webp) 파일이 있으면 실제 이미지를,
-    없으면 색상이 반영된 자리표시(placeholder) 이미지를 보여준다."""
+    """assets/cars/<car_id>/<color_id>.(jpg|jpeg|png|webp) 파일이 있으면 해당 색상 실제 이미지를,
+    없으면 그 차량의 대표 사진(photo.*)을, 그마저 없으면 색상이 반영된 자리표시 이미지를 보여준다."""
     for ext in ("jpg", "jpeg", "png", "webp"):
         path = os.path.join(ASSETS_DIR, car_id, f"{color['id']}.{ext}")
         if os.path.exists(path):
             st.image(path, use_container_width=True)
+            return
+    for ext in ("jpg", "jpeg", "png", "webp"):
+        path = os.path.join(ASSETS_DIR, car_id, f"photo.{ext}")
+        if os.path.exists(path):
+            st.image(path, use_container_width=True)
+            st.caption("* 예시 이미지이며 실제 선택하신 색상과 다를 수 있습니다.")
             return
     svg = car_placeholder_svg(color["hex"])
     html = f'<div style="background:#f5f7fa;border-radius:18px;padding:1.2rem;">{svg}</div>'
@@ -462,16 +470,38 @@ def render_detail():
                 unsafe_allow_html=True)
 
     st.write("")
+    st.markdown("##### 트림 선택")
+    trim_names = [t["name"] for t in data.TRIM_LEVELS]
+    trim_idx = next((i for i, t in enumerate(data.TRIM_LEVELS) if t["id"] == st.session_state.selected_trim_id), 0)
+    chosen_trim_name = st.radio("트림 선택", trim_names, index=trim_idx, horizontal=True,
+                                 label_visibility="collapsed", key="trim_radio")
+    trim = data.TRIM_LEVELS[trim_names.index(chosen_trim_name)]
+    st.session_state.selected_trim_id = trim["id"]
+    delta_txt = f" (+{data.fmt_10k(trim['price_delta'])})" if trim["price_delta"] else " (기본 포함)"
+    st.caption(f"{trim['desc']}{delta_txt}")
+
+    st.markdown("##### 휠 선택")
+    wheel_names = [w["name"] for w in data.WHEEL_OPTIONS]
+    wheel_idx = next((i for i, w in enumerate(data.WHEEL_OPTIONS) if w["id"] == st.session_state.selected_wheel_id), 0)
+    chosen_wheel_name = st.radio("휠 선택", wheel_names, index=wheel_idx, horizontal=True,
+                                  label_visibility="collapsed", key="wheel_radio")
+    wheel = data.WHEEL_OPTIONS[wheel_names.index(chosen_wheel_name)]
+    st.session_state.selected_wheel_id = wheel["id"]
+
+    st.write("")
     used_price = data.get_used_price(st.session_state.used_brand, st.session_state.used_model,
                                       st.session_state.used_year)
-    principal = max(car["price"] - used_price, 0)
-    monthly = data.calc_monthly_payment(st.session_state.finance_id, principal, car["price"],
+    total_price = car["price"] + trim["price_delta"] + wheel["price_delta"]
+    principal = max(total_price - used_price, 0)
+    monthly = data.calc_monthly_payment(st.session_state.finance_id, principal, total_price,
                                          st.session_state.term_months)
     finance_name = next(f["name"] for f in data.FINANCE_OPTIONS if f["id"] == st.session_state.finance_id)
     st.markdown(
         f"""
         <div class="car-card">
-            <div class="price-row"><span>차량 가격</span><span>{data.fmt_10k(car['price'])}</span></div>
+            <div class="price-row"><span>차량 기본가</span><span>{data.fmt_10k(car['price'])}</span></div>
+            <div class="price-row"><span>트림 · 휠 추가금</span><span>+{data.fmt_10k(trim['price_delta'] + wheel['price_delta'])}</span></div>
+            <div class="price-row"><span>총 차량 가격</span><span>{data.fmt_10k(total_price)}</span></div>
             <div class="price-row"><span>금융조건</span><span>{finance_name} · {st.session_state.term_months}개월</span></div>
             <div class="price-row total"><span>예상 월 납부금</span><span>월 {data.fmt_10k(monthly)}</span></div>
         </div>
