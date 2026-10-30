@@ -378,21 +378,21 @@ FINANCE_OPTIONS = [
         "name": "할부",
         "summary": "내 소유의 차량으로, 주행거리 제한 없이 자유롭게",
         "desc": "차량을 직접 소유하며 운전 경력이 오래된 분, 주행거리 제한 없이 운행하고 싶은 분께 적합합니다.",
-        "icon": "🚗",
+        "icon": "🚙",
     },
     {
         "id": "lease",
         "name": "리스",
         "summary": "부담없이 운행하고 4~5년마다 새 차로 교체",
         "desc": "차량을 유연하게 교체하며 타고 싶은 분, 평균 교체주기가 4~5년인 분께 적합합니다.",
-        "icon": "🔄",
+        "icon": "🚘",
     },
     {
         "id": "rent",
         "name": "렌트",
         "summary": "신용영향 없이, 초기비용 없이 부담없이 시작",
         "desc": "신용점수에 영향 없이, 초기 비용 부담 없이 차량을 운행하고 싶은 분께 적합합니다.",
-        "icon": "🛡️",
+        "icon": "✨",
     },
 ]
 
@@ -445,3 +445,48 @@ def fmt_10k(value_10k: float) -> str:
     """만원 단위 숫자를 '3,800만원' 형태 문자열로 변환."""
     v = int(round(value_10k))
     return f"{v:,}만원"
+
+
+# ---------------------------------------------------------------------------
+# 5) 페르소나 / 매칭률 / 추천 설명
+# ---------------------------------------------------------------------------
+
+PERSONAS = [
+    {"name": "NEW EXPLORER", "title": "새로운 경험을 먼저 만나는 사람",
+     "desc": "새로운 기술과 이동 방식에 호기심이 많고, 차도 하나의 경험으로 고르는 타입입니다.",
+     "quote": "익숙한 길보다, 처음 가보는 길이 더 설레요."},
+    {"name": "STYLE SEEKER", "title": "디자인과 존재감을 고르는 사람",
+     "desc": "볼 때마다 만족스러운 외관과 분위기를 중요하게 보는 타입입니다.",
+     "quote": "타는 순간보다, 바라보는 순간이 더 좋은 차."},
+    {"name": "SMART PLANNER", "title": "꼼꼼히 비교해 합리적으로 고르는 사람",
+     "desc": "가격, 공간, 유지비를 따져 가장 현명한 선택을 하는 타입입니다.",
+     "quote": "좋은 차는 비싼 차가 아니라, 나에게 맞는 차."},
+    {"name": "DRIVING ENTHUSIAST", "title": "운전의 재미를 아는 사람",
+     "desc": "주행 성능과 핸들링, 달리는 즐거움을 가장 중요하게 보는 타입입니다.",
+     "quote": "목적지보다, 가는 길이 더 즐거운 사람."},
+]
+
+
+def get_persona(q1_idx: int) -> dict:
+    return PERSONAS[q1_idx]
+
+
+def car_score(car: dict, q1_idx: int, q2_idx: int, q3_idx: int) -> int:
+    s = car["scores"]
+    return s["q1"][q1_idx] + s["q2"][q2_idx] + s["q3"][q3_idx]
+
+
+def match_percent(car: dict, q1_idx: int, q2_idx: int, q3_idx: int) -> int:
+    """취향 점수(최대 9점)를 55~99% 매칭률로 환산."""
+    return min(99, round(55 + 45 * car_score(car, q1_idx, q2_idx, q3_idx) / 9))
+
+
+def explain_rule_based(car: dict, q1_idx: int, q2_idx: int, q3_idx: int, has_car: bool) -> str:
+    a1 = QUESTIONS[0]["options"][q1_idx]
+    a2 = QUESTIONS[1]["options"][q2_idx]
+    a3 = QUESTIONS[2]["options"][q3_idx]
+    tail = ("보유하신 차량의 중고 판매가를 반영해 부담을 줄인 견적도 함께 확인해 보세요."
+            if has_car else "원하는 금융조건으로 월 납부금을 바로 확인해 보세요.")
+    return (f"'{a1}', '{a2}', '{a3}'라고 답해 주신 취향을 종합했을 때 "
+            f"{car['brand']} {car['model']}이(가) 가장 잘 맞습니다. "
+            f"{car['desc']} {tail}")

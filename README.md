@@ -44,6 +44,15 @@ assets/cars/ev6/green.jpg
 
 차량 id / 색상 id 목록은 `data.py`의 `NEW_CAR_RECS`를 확인하세요.
 
+## AI 추천 설명 (OpenAI API) 설정
+
+추천 결과 화면의 "이 차를 추천드려요" 설명은 OpenAI API로 생성됩니다. API 키를 **Secrets에만** 넣어 주세요 (코드·GitHub·채팅에 붙여넣지 않기).
+
+- 로컬: `.streamlit/secrets.toml` 에 `OPENAI_API_KEY = "sk-..."` 추가 (모델을 바꾸려면 `OPENAI_MODEL = "..."`, 기본값 `gpt-4o-mini`)
+- Streamlit Cloud: `⋮` → `Settings` → `Secrets` 에 같은 내용 추가
+- 키가 없거나 호출이 실패하면 앱이 멈추지 않고 규칙 기반 설명으로 자동 대체됩니다.
+- OpenAI로 전송되는 내용은 추천 차량 정보와 취향 답변·금융조건 선택값뿐이며, 이름·연락처·차량번호는 보내지 않습니다.
+
 ## 상담 신청 이메일 발송 설정
 
 마지막 "차량 만나보기" 화면의 상담 신청 폼은 이름/연락처를 입력해 제출하면 지정한 이메일로 신청 내용이 발송됩니다. Gmail 계정과 앱 비밀번호가 필요합니다.
