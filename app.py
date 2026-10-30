@@ -31,6 +31,39 @@ _ICON_PATHS = {
 FIN_ICON = {"installment": "wallet", "lease": "swap", "rent": "calendar"}
 
 
+# 상단 로고 마크: 부장님 서비스(dream.webp)와 같은 톤(은은한 블루·민트 배경 + 실버/라이트블루 소프트 차량)의 벡터 일러스트.
+# 직접 만든 이미지를 쓰려면 assets/brand/logo.png (또는 jpg/webp) 를 넣으면 자동으로 이 일러스트 대신 쓰인다.
+_BRAND_SVG = (
+    '<svg viewBox="5 16 54 36" xmlns="http://www.w3.org/2000/svg" aria-label="드림카">'
+    '<defs>'
+    '<linearGradient id="bgm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#cfe9ff"/><stop offset="1" stop-color="#d3f5e9"/></linearGradient>'
+    '<linearGradient id="bdy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7f9fc"/><stop offset="1" stop-color="#bfcbdb"/></linearGradient>'
+    '<linearGradient id="gls" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d7eeff"/><stop offset="1" stop-color="#7fbdf0"/></linearGradient>'
+    '</defs>'
+    '<rect x="0" y="0" width="64" height="64" fill="url(#bgm)"/>'
+    '<path d="M-4 52 C14 40 40 38 70 46 L70 70 L-4 70Z" fill="#ffffff" opacity=".5"/>'
+    '<ellipse cx="32" cy="48.5" rx="23" ry="3.2" fill="#2b5f8f" opacity=".18"/>'
+    '<path d="M16.5 34 L21.5 24.6 Q22.6 22.8 24.7 22.8 H38.4 Q40.5 22.8 41.9 24.4 L48 34Z" fill="url(#bdy)"/>'
+    '<path d="M21.3 33 L25 26 H31 V33Z" fill="url(#gls)"/>'
+    '<path d="M33 26 H38 Q39 26 39.7 26.9 L44.2 33 H33Z" fill="url(#gls)"/>'
+    '<rect x="8" y="32.5" width="49" height="12" rx="6" fill="url(#bdy)"/>'
+    '<rect x="10" y="40.2" width="45" height="3.4" rx="1.7" fill="#7cc4f5"/>'
+    '<ellipse cx="54.4" cy="37" rx="2.3" ry="1.7" fill="#fff4b8"/>'
+    '<circle cx="19.5" cy="43.8" r="5.6" fill="#33445c"/><circle cx="19.5" cy="43.8" r="3" fill="#e9eff7"/>'
+    '<circle cx="45.5" cy="43.8" r="5.6" fill="#33445c"/><circle cx="45.5" cy="43.8" r="3" fill="#e9eff7"/>'
+    '</svg>'
+)
+
+
+def brand_mark() -> str:
+    brand_dir = os.path.join(os.path.dirname(__file__), "assets", "brand")
+    for ext in IMAGE_EXTS:
+        path = os.path.join(brand_dir, f"logo.{ext}")
+        if os.path.exists(path):
+            return f'<img src="{_image_data_uri(path)}" alt="드림카">'
+    return _BRAND_SVG
+
+
 def ico(name: str, size: int = 22) -> str:
     return (f'<svg class="ico" viewBox="0 0 24 24" width="{size}" height="{size}" fill="none" stroke="currentColor" '
             f'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">{_ICON_PATHS[name]}</svg>')
@@ -64,16 +97,17 @@ header[data-testid="stHeader"],#MainMenu,footer,[data-testid="stToolbar"],[data-
 
 /* 상단 바 / 히어로 / STEP 탭 */
 .dc-top{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 18px;}
-.dc-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px;color:var(--text);}
-.dc-logo i{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#1a8fd6,#0067ac);color:#fff;
-  display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:15px;box-shadow:0 6px 16px rgba(0,103,172,.32);}
-.dc-brand{font-weight:700;color:var(--text-muted);font-size:14.5px;text-align:right;}
+.dc-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:-.01em;color:var(--text);}
+.dc-logo i{width:44px;height:44px;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#dff0ff,#d7f6ec);
+  display:inline-flex;align-items:center;justify-content:center;font-style:normal;border:1px solid #cfe3f5;box-shadow:0 6px 16px rgba(0,103,172,.18);}
+.dc-logo i svg,.dc-logo i img{width:100%;height:100%;display:block;object-fit:cover;object-position:42% 55%;}
+.dc-logo em{font-style:normal;color:var(--accent);}
+.dc-brand{text-align:right;}
 .dc-proto{display:inline-block;border:1px solid rgba(217,138,0,.55);color:#8a5a00;background:rgba(251,191,36,.18);
   padding:2px 10px;border-radius:999px;font-size:.7rem;font-weight:800;letter-spacing:.12em;margin-left:8px;vertical-align:middle;}
 .dc-brand .dc-proto{display:block;width:max-content;margin:4px 0 0 auto;}
-.dc-hero{--tint:#cfe8fb;position:relative;overflow:hidden;border-radius:28px;padding:44px 38px 30px;color:#fff;margin-bottom:16px;
+.dc-hero{--tint:#cfe8fb;position:relative;overflow:hidden;border-radius:28px;padding:34px 36px 28px;color:#fff;margin-bottom:16px;
   background:radial-gradient(circle at 90% -5%,rgba(120,205,255,.55),transparent 46%),
-  repeating-linear-gradient(115deg,rgba(255,255,255,.05) 0 2px,transparent 2px 24px),
   linear-gradient(135deg,#00376a 0%,#0067ac 60%,#1a8fd6 125%);
   box-shadow:0 20px 44px rgba(0,80,140,.30);}
 .dc-kick{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);
@@ -82,8 +116,8 @@ header[data-testid="stHeader"],#MainMenu,footer,[data-testid="stToolbar"],[data-
 .dc-hero h1.t{color:#fff;font-size:2.4rem;line-height:1.25;font-weight:800;margin:18px 0 14px;padding:0;position:relative;z-index:1;}
 .dc-hero h1.t em{font-style:normal;color:#ffd166;}
 .dc-hero p{color:rgba(255,255,255,.9);font-size:1rem;line-height:1.7;margin:0;max-width:580px;position:relative;z-index:1;}
-.dc-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;position:relative;z-index:1;}
-.dc-tags span{border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.12);border-radius:999px;padding:7px 14px;font-size:.85rem;font-weight:700;color:#fff;}
+.dc-tags{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:16px;max-width:520px;position:relative;z-index:1;}
+.dc-tags span{border:1px solid rgba(255,255,255,.26);background:rgba(255,255,255,.11);border-radius:999px;padding:5px 4px;font-size:.76rem;font-weight:700;color:#fff;text-align:center;white-space:nowrap;}
 .dc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,255,.22);position:relative;z-index:1;}
 .dc-stats b{display:block;font-size:1.9rem;font-weight:800;color:#fff;line-height:1.1;}
 .dc-stats span{display:block;font-size:.82rem;color:var(--tint);margin-top:4px;font-weight:600;}
@@ -112,10 +146,12 @@ header[data-testid="stHeader"],#MainMenu,footer,[data-testid="stToolbar"],[data-
 .dc-card .tt{font-size:1.12rem;font-weight:800;color:var(--text);}
 .dc-card .ds{font-size:.92rem;color:var(--text-muted);margin-top:6px;line-height:1.55;}
 .dc-card .go{font-size:.85rem;font-weight:800;color:var(--accent);margin-top:12px;}
-.dc-card.fork{min-height:200px;}
+.dc-card.fork{min-height:0;display:grid;grid-template-columns:auto 1fr;column-gap:14px;align-items:start;padding:18px 20px;}
 .dc-card .ic{margin-bottom:12px;}
 .dc-card.fork .ic{width:54px;height:54px;border-radius:17px;background:var(--accent-soft);border:1px solid var(--accent-line);
   color:var(--accent);display:flex;align-items:center;justify-content:center;}
+.dc-card.fork .ic{grid-row:1 / span 3;width:46px;height:46px;border-radius:14px;margin:0;}
+.dc-card.fork .go{margin-top:8px;}
 svg.ico{display:block;}
 .dc-card.cmp .nm svg.ico{display:inline-block;vertical-align:-3px;margin-right:5px;color:var(--accent);}
 .dc-fleet .im svg.ico{opacity:.7;}
@@ -295,6 +331,36 @@ div[data-testid="stRadio"] label[data-testid="stRadioOption"][data-selected="tru
 .dc-card.row .nm span{display:block;font-weight:600;font-size:.78rem;color:var(--text-muted);margin-top:2px;}
 .dc-card.row .mt{font-weight:800;color:var(--mint);}
 .dc-card.row .pr{font-size:.82rem;color:var(--text-muted);font-weight:700;min-width:70px;text-align:right;}
+.dc-hc{display:flex;gap:18px;align-items:center;padding:16px;}
+.dc-hc .im{width:230px;height:150px;flex:none;border-radius:18px;background:#eef3fa;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.dc-hc .im img{width:100%;height:100%;object-fit:contain;}
+.dc-hc .tx{flex:1;min-width:0;}
+.dc-hc h3{font-size:1.5rem;font-weight:800;margin:4px 0;padding:0;color:var(--text);}
+.dc-hc .ds{color:var(--text-muted);font-size:.92rem;line-height:1.5;}
+.dc-hm{margin-top:10px;font-weight:800;color:var(--accent);font-size:1rem;}
+.dc-hm b{font-size:2rem;letter-spacing:-.02em;margin:0 2px;}
+.dc-hm span{display:block;font-size:.8rem;font-weight:600;color:var(--text-muted);margin-top:2px;}
+.dc-valc{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;margin-top:14px;}
+.dc-valc .nm{font-size:.95rem;margin-top:4px;color:rgba(255,255,255,.92);font-weight:700;}
+.dc-valc .rg{font-size:.76rem;margin-top:3px;color:rgba(255,255,255,.72);}
+.dc-valc .pr{font-size:2rem;font-weight:800;line-height:1.1;white-space:nowrap;text-align:right;}
+.dc-valc .pr small{font-size:.9rem;font-weight:700;}
+[data-testid="stLayoutWrapper"]:has(> .st-key-stickynav){position:sticky;bottom:0;z-index:30;}
+.st-key-stickynav{padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(180deg,rgba(243,246,251,0),rgba(243,246,251,.96) 28%);backdrop-filter:blur(6px);}
+.st-key-stickynav [data-testid="stHorizontalBlock"]{flex-wrap:nowrap!important;gap:8px!important;}
+.st-key-stickynav [data-testid="stColumn"]{min-width:0!important;}
+.dc-rankbox{padding:8px 20px 16px;}
+.dc-rank{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);}
+.dc-rank .rk{width:28px;height:28px;border-radius:9px;background:var(--surface-2);color:var(--text-muted);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex:none;}
+.dc-rank .rk.top{background:var(--accent);color:#fff;}
+.dc-rank .bd{flex:1;min-width:0;}
+.dc-rank .lb{display:flex;justify-content:space-between;gap:8px;font-size:.92rem;margin-bottom:5px;}
+.dc-rank .lb b{color:var(--text);} .dc-rank .lb span{color:var(--text-muted);font-weight:700;}
+.dc-rank .tr{height:7px;border-radius:99px;background:#e1e8f3;overflow:hidden;}
+.dc-rank .tr i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#0067ac,#38b6ff);}
+.dc-rankbox .src{font-size:.72rem;color:var(--text-subtle);margin-top:12px;line-height:1.5;}
+.dc-rankbox .src a{color:var(--accent);font-weight:700;}
 .dc-hint{font-size:.78rem;color:var(--text-subtle);margin:2px 0 8px;text-align:right;}
 div[data-testid="stElementContainer"]:has(iframe){position:absolute!important;height:0!important;overflow:hidden;margin:0!important;opacity:0;}
 .st-key-top5row [data-testid="stHorizontalBlock"]{flex-wrap:nowrap!important;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px!important;padding-bottom:8px;-webkit-overflow-scrolling:touch;}
@@ -325,7 +391,9 @@ div[data-testid="stForm"]{background:var(--surface);border:1px solid var(--borde
   .dc-card.fork{min-height:0;} .dc-card.opt{min-height:0;padding:16px 16px;}
   .block-container{padding:.8rem .75rem 4rem;}
   h2.dc-h2{font-size:1.25rem;}
-  .dc-hero{padding:30px 22px 22px;} .dc-hero h1.t{font-size:1.7rem;}
+  .dc-hc{flex-direction:column;align-items:stretch;} .dc-hc .im{width:100%;height:135px;}
+  .dc-hero{padding:24px 20px 20px;} .dc-hero h1.t{font-size:1.55rem;margin:14px 0 10px;} .dc-hero p{font-size:.92rem;line-height:1.6;}
+  .dc-tags{grid-template-columns:repeat(2,1fr);} .dc-tags span{padding:6px 4px;font-size:.74rem;}
   .dc-persona{flex-direction:column;align-items:stretch;} .dc-persona .im{width:100%;}
   .dc-grid{grid-template-columns:repeat(2,1fr);} .dc-quote .big{font-size:2.2rem;}
   .dc-dark{padding:22px 20px;} .dc-how{grid-template-columns:repeat(2,1fr);} .dc-fleet{grid-template-columns:repeat(2,1fr);}
@@ -351,7 +419,7 @@ defaults = {
     "q1": None,
     "q2": None,
     "q3": None,
-    "finance_id": None,
+    "finance_id": "lease",
     "term_months": data.DEFAULT_TERM_MONTHS,
     "selected_car_id": None,
     "selected_color_idx": 0,
@@ -407,8 +475,8 @@ def scroll_to_top_on_page_change():
 def topbar():
     scroll_to_top_on_page_change()
     st.markdown(
-        '<div id="dc-top"></div><div class="dc-top"><div class="dc-logo"><i>' + ico("spark", 18) + '</i>우리금융캐피탈</div>'
-        '<div class="dc-brand">DREAM:CAR<span class="dc-proto">PROTOTYPE</span></div></div>',
+        '<div id="dc-top"></div><div class="dc-top"><div class="dc-logo"><i>' + brand_mark() + '</i><span>드림<em>:</em>Car</span></div>'
+        '<div class="dc-brand"><span class="dc-proto">PROTOTYPE</span></div></div>',
         unsafe_allow_html=True,
     )
 
@@ -422,30 +490,28 @@ def reachable(app_step: int) -> bool:
     started = ss.has_car is False or (ss.has_car is True and ss.car_confirmed)
     if app_step == 2:
         return started
-    if app_step == 3:
-        return started and answered
     if app_step == 4:
-        return started and answered and ss.finance_id is not None
+        return started and answered
     if app_step == 5:
         return reachable(4)
     return False
 
 
-STEP_FULL = ["내 차 가치 확인", "라이프스타일 분석", "금융조건 선택", "드림카 추천·견적", "차량 만나보기"]
-STEP_SHORT = ["내 차", "취향", "금융", "추천·견적", "만나보기"]
+# 앱 단계 번호 → (긴 이름, 짧은 이름). 3번(금융 선택)은 결과 화면 안으로 합쳤다.
+STEP_LABELS = {1: ("내 차 가치 확인", "내 차"), 2: ("라이프스타일 분석", "취향"),
+               4: ("드림카 추천·견적", "추천·견적"), 5: ("차량 만나보기", "만나보기")}
 
 
 def step_chips(step_idx: int):
-    """step_idx: 앱 단계(0=시작, 1=보유차량, 2=취향, 3=금융, 4=추천·견적, 5=만나보기).
+    """step_idx: 앱 단계(0=시작, 1=보유차량, 2=취향, 4=추천·견적, 5=만나보기).
     시작 화면은 안내용 표시만, 그 외 화면은 이동 가능한 단계(데이터가 이미 있는 단계)를 눌러서 이동할 수 있다."""
-    app_steps = [1, 2, 3, 4, 5]
+    app_steps = [1, 2, 4, 5]
     if st.session_state.has_car is False:
-        app_steps = [2, 3, 4, 5]
-    idxs = [a - 1 for a in app_steps]
+        app_steps = [2, 4, 5]
 
     def chip_html(pos, a, cls):
         return (f'<div class="dc-chip {cls}"><b>STEP {pos + 1:02d}</b>'
-                f'<span class="fl">{STEP_FULL[a - 1]}</span><span class="sh">{STEP_SHORT[a - 1]}</span></div>')
+                f'<span class="fl">{STEP_LABELS[a][0]}</span><span class="sh">{STEP_LABELS[a][1]}</span></div>')
 
     if step_idx <= 0:
         st.markdown('<div class="dc-steps">' + "".join(chip_html(i, a, "") for i, a in enumerate(app_steps)) + "</div>",
@@ -520,81 +586,18 @@ def disclaimer():
 # ---------------------------------------------------------------------------
 # 차량 이미지
 # ---------------------------------------------------------------------------
-# ---------------------------------------------------------------------------
-# 실시간 외부 데이터 (키 없이 쓰는 공개 API, 실패하면 조용히 생략)
-# ---------------------------------------------------------------------------
-WMO_TEXT = {0: "맑음", 1: "대체로 맑음", 2: "구름 조금", 3: "흐림", 45: "안개", 48: "안개", 51: "이슬비", 53: "이슬비", 55: "이슬비",
-            61: "비", 63: "비", 65: "강한 비", 66: "얼어붙는 비", 67: "얼어붙는 비", 71: "눈", 73: "눈", 75: "강한 눈", 77: "싸락눈",
-            80: "소나기", 81: "소나기", 82: "강한 소나기", 85: "눈 소나기", 86: "눈 소나기", 95: "뇌우", 96: "뇌우", 99: "뇌우"}
-
-
-def _http_json(url: str, timeout: int = 6):
-    req = urllib.request.Request(url, headers={"User-Agent": "woori-car-match-demo/1.0"})
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return json.load(resp)
-
-
-@st.cache_data(ttl=600, show_spinner=False)
-def fetch_weather():
-    """서울 현재 날씨 (Open-Meteo, 키 불필요). 실패하면 None."""
-    try:
-        d = _http_json("https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780"
-                       "&current=temperature_2m,precipitation,wind_speed_10m,weather_code&timezone=Asia%2FSeoul")
-        return d["current"]
-    except Exception:
-        return None
-
-
-def drive_index(w: dict):
-    """날씨로 계산한 '오늘의 드라이브 지수'(0~100)와 한 줄 평."""
-    score = 100
-    code, temp, wind, rain = w.get("weather_code", 0), w.get("temperature_2m", 20), w.get("wind_speed_10m", 0), w.get("precipitation", 0)
-    if rain and rain > 0:
-        score -= 30
-    if code in (51, 53, 55, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99):
-        score -= 20
-    if code in (71, 73, 75, 77, 85, 86):
-        score -= 45
-    if code in (45, 48):
-        score -= 30
-    if wind > 30:
-        score -= 20
-    elif wind > 20:
-        score -= 10
-    if temp < 0:
-        score -= 20
-    elif temp > 33:
-        score -= 15
-    score = max(5, min(100, score))
-    label = "드라이브하기 딱 좋은 날이에요" if score >= 80 else ("무난한 드라이브 날씨예요" if score >= 55 else "오늘은 안전운전이 우선이에요")
-    return score, label
-
-
-@st.cache_data(ttl=3600, show_spinner=False)
-def fetch_fx():
-    """원/달러, 원/유로 환율 (open.er-api.com, 키 불필요·출처 표기 조건). 실패하면 None."""
-    try:
-        d = _http_json("https://open.er-api.com/v6/latest/USD")
-        krw, eur = d["rates"]["KRW"], d["rates"]["EUR"]
-        return {"usd": krw, "eur": krw / eur, "date": d.get("time_last_update_utc", "")[5:16]}
-    except Exception:
-        return None
-
-
-def live_strip_html() -> str:
-    w = fetch_weather()
-    fx = fetch_fx()
-    if not w and not fx:
-        return ""
-    parts = ['<span class="lv">LIVE</span>']
-    if w:
-        score, label = drive_index(w)
-        parts.append(f'<span>서울 <b>{w["temperature_2m"]:.0f}°C</b> {WMO_TEXT.get(w.get("weather_code"), "")} · 바람 {w["wind_speed_10m"]:.0f}km/h</span>')
-        parts.append(f'<span class="idx">오늘의 드라이브 지수 {score}</span><span>{label}</span>')
-    if fx:
-        parts.append(f'<span>환율 <b>1$ = {fx["usd"]:,.0f}원</b></span>')
-    parts.append('<span class="src">날씨 Open-Meteo · 환율 ExchangeRate-API · 수 분~1시간 간격 갱신 · 체험용 데이터</span>')
-    return '<div class="dc-live">' + "".join(parts) + "</div>"
+def sales_ranking_html() -> str:
+    """이번 달 판매 순위 (data.SALES_RANKING 을 매월 갱신)."""
+    sr = data.SALES_RANKING
+    top = max(n for _, n in sr["items"])
+    rows = []
+    for i, (name, n) in enumerate(sr["items"], 1):
+        rows.append(f'<div class="dc-rank"><span class="rk{" top" if i <= 3 else ""}">{i}</span>'
+                    f'<div class="bd"><div class="lb"><b>{name}</b><span>{n:,}대</span></div>'
+                    f'<div class="tr"><i style="width:{n / top * 100:.0f}%"></i></div></div></div>')
+    return ('<div class="dc-card dc-rankbox">' + "".join(rows)
+            + f'<div class="src">{sr["period"]} {sr["title"]} · 출처 <a href="{sr["url"]}" target="_blank" rel="noopener">{sr["source"]}</a>'
+              f' · 매월 갱신 · 집계 기준에 따라 수치가 다를 수 있어요</div></div>')
 
 
 def thumb(car: dict) -> str:
@@ -602,15 +605,6 @@ def thumb(car: dict) -> str:
     if uri:
         return f'<div class="im"><img src="{uri}"></div>'
     return f'<div class="im ph">{car_placeholder_svg("#8fa0ba")}<span>PHOTO SOON</span></div>'
-
-
-def persona_axes(q1: int, q2: int, q3: int):
-    ax = {"경험": 35, "디자인": 35, "실용": 35, "주행": 35}
-    names = ["경험", "디자인", "실용", "주행"]
-    ax[names[q1]] += 50
-    ax[["실용", "경험", "주행", "실용"][q3]] += 15
-    ax[["실용", "실용", "경험", "주행"][q2]] += 10
-    return [(k, min(v, 100)) for k, v in ax.items()]
 
 
 def reason_items(car: dict, q1: int, q2: int, q3: int):
@@ -747,14 +741,21 @@ def quote_card(q: dict, extra_tiles=None):
     car_txt = (f"{st.session_state.used_brand} {st.session_state.used_model} {st.session_state.used_year}년"
                if has_car else "보유차량 없음")
     title = "보상판매 반영 예상 월 납부금" if has_car else "예상 월 납부금"
-    tiles = [
-        ("신차가격", data.fmt_10k(q["total"])),
-        ("내 차 시세", data.fmt_10k(q["used"])),
-        ("원금" + (" (차량가−시세)" if has_car else " (차량가 전액)"), data.fmt_10k(q["principal"])),
-        ("약정기간", f"{q['term']}개월"),
-        ("현재 차량", car_txt),
-        ("금융조건", finance_name()),
-    ]
+    if has_car:
+        tiles = [
+            ("신차가격", data.fmt_10k(q["total"])),
+            ("내 차 시세", data.fmt_10k(q["used"])),
+            ("원금 (차량가−시세)", data.fmt_10k(q["principal"])),
+            ("약정기간", f"{q['term']}개월"),
+            ("현재 차량", car_txt),
+            ("금융조건", finance_name()),
+        ]
+    else:   # 보유 차량이 없으면 시세·현재 차량 항목 자체를 보여주지 않는다 (원금 = 차량가)
+        tiles = [
+            ("원금 (신차가격)", data.fmt_10k(q["principal"])),
+            ("약정기간", f"{q['term']}개월"),
+            ("금융조건", finance_name()),
+        ]
     tiles += extra_tiles or []
     tiles.append(("예상 총 납부액", data.fmt_10k(q["total_pay"])))
     grid = "".join(f'<div class="dc-tile"><span>{a}</span><b>{b}</b></div>' for a, b in tiles)
@@ -876,24 +877,14 @@ def send_consultation_email(payload: dict):
 # ---------------------------------------------------------------------------
 def render_intro():
     topbar()
-    n_cars = len(data.NEW_CAR_RECS)
-    n_colors = sum(len(c["colors"]) for c in data.NEW_CAR_RECS)
     st.markdown(
         '<div class="dc-hero"><div class="dc-kick">MY CAR CHANGE JOURNEY</div>'
         '<h1 class="t">지금 타는 차에서,<br><em>다음 드림카까지.</em></h1>'
-        '<p>내 차의 가치를 확인하고, 라이프스타일로 새 차를 추천받은 뒤 시세를 반영한 원금과 월 납부금까지 '
-        '한 번에 확인해 보세요. 타는 차가 없어도 괜찮아요.</p>'
-        '<div class="dc-tags"><span>내 차 시세</span><span>취향 매칭</span><span>AI 추천 설명</span><span>월 납부금 견적</span></div>'
-        f'<div class="dc-stats"><div><b>{n_cars}</b><span>추천 후보 차종</span></div>'
-        f'<div><b>{n_colors}</b><span>선택 가능한 색상</span></div>'
-        '<div><b>3</b><span>할부 · 리스 · 렌트 견적</span></div></div></div>',
+        '<p>3가지 질문으로 나에게 맞는 차를 추천받고, 내 차 시세를 반영한 월 납부금까지 1분 만에 확인하세요.</p></div>',
         unsafe_allow_html=True,
     )
-    live = live_strip_html()
-    if live:
-        st.markdown(live, unsafe_allow_html=True)
-    section("MY CURRENT CAR", "지금 타고 계신 차가 있으신가요?",
-            "차량이 있다면 내 차 시세를 확인해 원금에 반영하고, 없다면 바로 드림카 찾기로 넘어갑니다.")
+    section("START", "지금 타고 계신 차가 있으신가요?",
+            "차가 있으면 시세를 원금에서 빼 드리고, 없어도 바로 추천받을 수 있어요.")
     c1, c2 = st.columns(2)
     with c1:
         if card_button("fork_has", '<div class="dc-card fork"><div class="ic">' + ico("key", 26) + '</div><div class="tt">내 차가 있어요</div>'
@@ -911,23 +902,8 @@ def render_intro():
             st.session_state.used_year = None
             go(2)
 
-    section("HOW IT WORKS", "이렇게 진행돼요", "질문 3개와 금융조건 선택만으로 끝나요. 평균 1분이면 충분해요.", cls="dc-sec")
-    steps = [("STEP 01", "내 차 시세 확인", "타는 차가 있다면 예상 판매가를 먼저 계산해요"),
-             ("STEP 02", "라이프스타일 분석", "3가지 질문으로 나에게 맞는 차를 찾아요"),
-             ("STEP 03", "금융조건 선택", "할부·리스·렌트 중 나에게 맞는 방식을 골라요"),
-             ("STEP 04", "추천 · 견적", "추천 이유와 원금, 월 납부금을 한눈에 확인해요")]
-    st.markdown('<div class="dc-how">' + "".join(
-        f'<div><em>{a}</em><b>{b}</b><span>{c}</span></div>' for a, b, c in steps) + "</div>",
-        unsafe_allow_html=True)
-
-    section("DREAM CAR LINE-UP", "추천 후보 차량 미리보기", "취향에 따라 이런 차량들이 추천돼요.", cls="dc-sec")
-    fleet = []
-    for cid in ("ioniq5", "gv70", "bmw3", "santafe"):
-        car = data.get_car_by_id(cid)
-        uri = car_rep_uri(car)
-        im = f'<div class="im"><img src="{uri}"></div>' if uri else '<div class="im" style="color:#8a97ae;">' + ico("car", 40) + '</div>'
-        fleet.append(f'<div>{im}<div class="bd"><b>{car["model"]}</b><span>{car["segment"]} · {data.fmt_10k(car["price"])}</span></div></div>')
-    st.markdown('<div class="dc-fleet">' + "".join(fleet) + "</div>", unsafe_allow_html=True)
+    section("BEST SELLERS", "요즘 가장 많이 팔린 차는?", data.SALES_RANKING["subtitle"], cls="dc-sec")
+    st.markdown(sales_ranking_html(), unsafe_allow_html=True)
     disclaimer()
 
 
@@ -958,23 +934,21 @@ def render_used_car():
     retain = round(100 * used_price / info["new_price"])
     lo, hi = round(used_price * 0.95), round(used_price * 1.05)
     st.markdown(
-        '<div class="dc-dark val" style="margin-top:14px;"><div class="dc-eb" style="color:var(--tint);">MY CAR VALUE</div>'
-        f'<div style="font-size:.98rem;margin-top:4px;color:rgba(255,255,255,.88);">{brand} {model} · {year}년식 · {info["segment"]}</div>'
-        f'<div style="font-size:2.6rem;font-weight:800;margin-top:4px;line-height:1.15;">{used_price:,}<small style="font-size:1.1rem;"> 만원</small></div>'
-        f'<div class="dc-grid" style="grid-template-columns:repeat(3,1fr);">'
-        f'<div class="dc-tile"><span>예상 시세 범위</span><b>{lo:,}~{hi:,}만원</b></div>'
-        f'<div class="dc-tile"><span>차령</span><b>{age}년차</b></div>'
-        f'<div class="dc-tile"><span>신차가 대비 잔존가치</span><b>{retain}%</b></div></div>'
-        '<div class="foot" style="font-size:.8rem;color:rgba(255,255,255,.7);margin-top:14px;">'
-        '예상 중고차 판매가는 신차 견적에서 원금으로 차감돼요.</div></div>',
+        '<div class="dc-dark val dc-valc"><div class="l"><div class="dc-eb" style="color:var(--tint);">MY CAR VALUE</div>'
+        f'<div class="nm">{brand} {model} · {year}년식</div>'
+        f'<div class="rg">예상 범위 {lo:,}~{hi:,}만원 · 잔존가치 {retain}%</div></div>'
+        f'<div class="pr">{used_price:,}<small> 만원</small></div></div>'
+        '<p class="dc-note" style="margin-bottom:84px;">예상 중고차 판매가는 신차 견적에서 원금으로 차감돼요.</p>',
         unsafe_allow_html=True,
     )
-    n1, n2 = st.columns([1, 2])
-    if n1.button("← 처음으로", use_container_width=True):
-        go(0)
-    if n2.button("라이프스타일 분석 시작 →", type="primary", use_container_width=True):
-        st.session_state.car_confirmed = True
-        go(2)
+    # 선택 결과를 보면서도 다음 버튼이 항상 보이도록 하단에 고정
+    with st.container(key="stickynav"):
+        n1, n2 = st.columns([1, 2])
+        if n1.button("← 처음으로", use_container_width=True):
+            go(0)
+        if n2.button("취향 선택하기 →", type="primary", use_container_width=True):
+            st.session_state.car_confirmed = True
+            go(2)
     disclaimer()
 
 
@@ -1012,7 +986,7 @@ def render_taste():
                         st.session_state.q_sub += 1
                         st.rerun()
                     else:
-                        go(3)
+                        go(4)
 
     if st.button("← 이전", use_container_width=True):
         if q_sub == 0:
@@ -1024,141 +998,39 @@ def render_taste():
 
 
 # ---------------------------------------------------------------------------
-# STEP 3: 금융조건 선택
-# ---------------------------------------------------------------------------
-def render_finance():
-    page_head(3)
-    section("STEP 03 · FINANCE", "원하시는 금융조건을 선택해 주세요",
-            "카드를 누르면 바로 추천 결과로 넘어가요. 결과 화면에서 세 가지를 한눈에 비교할 수 있어요.")
-    for opt in data.FINANCE_OPTIONS:
-        sel = " sel" if st.session_state.finance_id == opt["id"] else ""
-        tags = "".join(f"<span>{t}</span>" for t in opt["tags"])
-        html = (f'<div class="dc-card fin{sel}"><div class="ic">{ico(FIN_ICON.get(opt["id"], "wallet"), 26)}</div><div>'
-                f'<div class="tt">{opt["name"]}<span class="sm">{opt["summary"]}</span></div>'
-                f'<div class="ds">{opt["desc"]}</div><div class="dc-tagrow">{tags}</div></div></div>')
-        if card_button(f"fin_{opt['id']}", html):
-            st.session_state.finance_id = opt["id"]
-            go(4)
-    if st.button("← 이전", use_container_width=True):
-        go(2, q_sub=2)
-    disclaimer()
-
-
-# ---------------------------------------------------------------------------
 # STEP 4: 추천 결과 + 견적
 # ---------------------------------------------------------------------------
 def render_result():
     page_head(4)
     q1, q2, q3 = st.session_state.q1, st.session_state.q2, st.session_state.q3
-    ranked = data.rank_cars(q1, q2, q3, st.session_state.finance_id)
+    ranked = data.rank_cars(q1, q2, q3)          # 금융조건을 바꿔도 추천 순서는 그대로
     top5, more = ranked[:5], ranked[5:10]
+    rank_of = {c["id"]: i + 1 for i, c in enumerate(ranked)}
     if st.session_state.selected_car_id not in [c["id"] for c in ranked[:10]]:
         st.session_state.selected_car_id = top5[0]["id"]
+
+    # 1) 추천 차량: 후보 선택 → 대표 카드
+    section("YOUR DREAM CAR", "당신에게 가장 잘 맞는 드림카", "취향 3가지와 가장 가까운 순서예요. 다른 후보도 눌러서 바로 비교해 보세요.")
+    pool = [c["id"] for c in top5]
+    if st.session_state.selected_car_id not in pool:
+        pool.append(st.session_state.selected_car_id)
+    seg(pool, "selected_car_id", f"w_res_car_{len(pool)}",
+        fmt=lambda i: f'{rank_of[i]}위 {data.get_car_by_id(i)["model"]}', label="추천 후보")
     car = data.get_car_by_id(st.session_state.selected_car_id)
-    rank_of = {c["id"]: i + 1 for i, c in enumerate(ranked)}
 
-    # 1) 페르소나 (성향 지표 포함)
-    persona = data.get_persona(q1)
-    axes = "".join(f'<div><div class="lb"><span>{k}</span><span>{v}</span></div><div class="tr"><i style="width:{v}%"></i></div></div>'
-                   for k, v in persona_axes(q1, q2, q3))
-    kws = "".join(f"<span>{data.ANSWER_NEEDS[i][idx]}</span>" for i, idx in enumerate((q1, q2, q3)))
-    st.markdown(
-        '<div class="dc-dark pers"><div class="dc-persona">' + thumb(car) + '<div style="flex:1;">'
-        '<div class="eb">YOUR MOBILITY PERSONA</div>'
-        f'<h3>{persona["name"]}</h3><div class="sb">{persona["title"]}</div>'
-        f'<div class="ds">{persona["desc"]}</div><div class="qt">“{persona["quote"]}”</div>'
-        f'<div class="dc-kw">{kws}</div><div class="dc-axes">{axes}</div></div></div></div>',
-        unsafe_allow_html=True,
-    )
-
-    # 2) TOP 5 (옆으로 넘기기)
-    section("DREAM CAR TOP 5", "당신에게 가장 잘 맞는 드림카 TOP 5",
-            f"총 {len(data.NEW_CAR_RECS)}개 차종을 취향과 금융조건 궁합까지 비교했어요. 카드를 누르면 아래 내용이 바뀌어요.",
-            cls="dc-sec")
-    st.markdown('<div class="dc-hint">← 옆으로 넘겨 5대 모두 확인하세요 →</div>', unsafe_allow_html=True)
-    box = st.container(key="top5row")
-    cols = box.columns(5)
-    for i, rc in enumerate(top5):
-        sel = " sel" if rc["id"] == car["id"] else ""
-        tag = f"TOP {i + 1}" + (" · 선택됨" if sel else "")
-        html = (f'<div class="dc-top3{sel}">{thumb(rc)}<div class="bd"><div class="tg">{tag}</div>'
-                f'<div class="rw"><div class="nm">{rc["model"]}</div>'
-                f'<div class="mt">{data.match_percent(rc, q1, q2, q3)}%</div></div>'
-                f'<div class="ds">{rc["tagline"]}</div><div class="pr">{rc["fuel"]} · {data.fmt_10k(rc["price"])}</div></div></div>')
-        with cols[i]:
-            if card_button(f"top_{rc['id']}", html):
-                st.session_state.selected_car_id = rc["id"]
-                st.rerun()
-
-    # 3) 6~10위 더 보기
-    section("MORE PICKS", "이런 차량도 후보예요", "6~10위 추천 후보예요. 눌러서 견적을 확인해 보세요.", cls="dc-sec")
-    for rc in more:
-        sel = " sel" if rc["id"] == car["id"] else ""
-        html = (f'<div class="dc-card row{sel}"><div class="rk">{rank_of[rc["id"]]}</div>'
-                f'<div class="nm">{rc["brand"]} {rc["model"]}<span>{rc["segment"]} · {rc["fuel"]} · {rc["seats"]}</span></div>'
-                f'<div class="mt">{data.match_percent(rc, q1, q2, q3)}%</div><div class="pr">{data.fmt_10k(rc["price"])}</div></div>')
-        if card_button(f"more_{rc['id']}", html):
-            st.session_state.selected_car_id = rc["id"]
-            st.rerun()
-
-    # 4) 추천 이유
-    section("WHY THIS CAR", f"{car['brand']} {car['model']}, 이래서 추천해요", "", cls="dc-sec")
-    with st.spinner("추천 이유를 정리하고 있어요…"):
-        text, is_ai = recommendation_text(car)
-    badge = '<span class="dc-ai">AI 추천 설명</span>' if is_ai else ""
     specs = "".join(f"<span>{x}</span>" for x in (car["segment"], car["fuel"], car["seats"], data.fmt_10k(car["price"])))
-    items = "".join(
-        f'<div class="dc-whyi"><div class="n">{r["n"]}</div><div class="tx"><b>‘{r["answer"]}’</b>'
-        f'<span class="dc-fit f{r["score"]}">{r["label"]}</span>'
-        f'<div class="need">{r["need"]}을(를) 원하셨어요</div>→ {r["trait"]}</div></div>'
-        for r in reason_items(car, q1, q2, q3))
+    hq = build_quote(car["price"])
     st.markdown(
-        '<div class="dc-card"><div class="dc-ebrow"><span class="dc-eb">추천 근거 3가지' + badge + '</span>'
-        f'<span class="dc-pill-s">LIFESTYLE MATCH {data.match_percent(car, q1, q2, q3)}%</span></div>'
-        f'<div class="dc-tagrow">{specs}</div><div class="dc-why" style="margin-top:12px;">{text}</div>'
-        + ('<p class="dc-note">※ AI가 작성한 설명이며 실제 상품 조건과 다를 수 있어요.</p>' if is_ai else "")
-        + f'<div style="margin-top:8px;">{items}</div></div>',
+        '<div class="dc-card dc-hc" style="margin-top:12px;">' + thumb(car) + '<div class="tx">'
+        f'<div class="dc-eb">TOP {rank_of[car["id"]]} · 취향 매칭 {data.match_percent(car, q1, q2, q3)}%</div>'
+        f'<h3>{car["brand"]} {car["model"]}</h3><div class="ds">{car["tagline"]}</div>'
+        f'<div class="dc-hm">월 <b>{hq["monthly"]:,.1f}</b>만원<span>{finance_name()} · {hq["term"]}개월 · 원금 {data.fmt_10k(hq["principal"])}</span></div>'
+        f'<div class="dc-tagrow">{specs}</div></div></div>',
         unsafe_allow_html=True,
     )
 
-    # 5) 참고할 점 + 실시간 정보(환율) + 뉴스 링크
-    news = "https://search.naver.com/search.naver?where=news&query=" + urllib.parse.quote(f"{car['model']} 신차")
-    note = f'<div class="dc-callout"><b>이런 점은 참고하세요</b><br>{car["watch"]}</div>'
-    if car["brand"] in IMPORT_BRANDS:
-        fx = fetch_fx()
-        if fx:
-            note += (f'<div class="dc-callout blue"><b>수입차는 환율에 민감해요</b><br>오늘 기준 1달러 = {fx["usd"]:,.0f}원, '
-                     f'1유로 = {fx["eur"]:,.0f}원이에요. 실제 차량 가격은 환율과 프로모션에 따라 달라질 수 있어요.</div>')
-    note += (f'<div class="dc-callout blue">{car["model"]}의 최신 소식이 궁금하다면 '
-             f'<a href="{news}" target="_blank" rel="noopener">최신 뉴스 검색 ↗</a></div>')
-    st.markdown(f'<div class="dc-card" style="margin-top:12px;"><div class="dc-eb">GOOD TO KNOW</div>{note}</div>',
-                unsafe_allow_html=True)
-
-    # 6) TOP5 한눈에 비교
-    section("COMPARE", "TOP 5 한눈에 비교", f"선택한 금융조건({finance_name()} · {st.session_state.term_months}개월) 기준이에요.",
-            cls="dc-sec")
-    head = "".join(f'<th class="{"hl" if rc["id"] == car["id"] else ""}">{rc["model"]}</th>' for rc in top5)
-    qs = [build_quote(rc["price"]) for rc in top5]
-
-    def row(label, vals):
-        cells = "".join(f'<td class="{"hl" if rc["id"] == car["id"] else ""}">{v}</td>' for rc, v in zip(top5, vals))
-        return f"<tr><td>{label}</td>{cells}</tr>"
-
-    table = (
-        '<div class="dc-tblwrap"><table class="dc-tbl"><tr><th></th>' + head + "</tr>"
-        + row("차급", [rc["segment"] for rc in top5])
-        + row("연료 · 승차", [f'{rc["fuel"]} · {rc["seats"]}' for rc in top5])
-        + row("차량가", [data.fmt_10k(rc["price"]) for rc in top5])
-        + row("원금", [data.fmt_10k(x["principal"]) for x in qs])
-        + row("월 납부금", [f'<b>{x["monthly"]:,.1f}만원</b>' for x in qs])
-        + row("취향 매칭률", [f'{data.match_percent(rc, q1, q2, q3)}%' for rc in top5])
-        + "</table></div>"
-    )
-    st.markdown(table, unsafe_allow_html=True)
-    st.markdown('<div class="dc-hint">표는 옆으로 넘길 수 있어요 →</div>', unsafe_allow_html=True)
-
-    # 7) 금융 3종 비교 + 설명
-    section("FINANCE COMPARE", f"{car['model']} · 금융조건별 월 납부금", "카드를 누르면 아래 견적이 바뀌어요.", cls="dc-sec")
+    # 2) 월 납부금: 금융조건 3종 → 약정기간 → 견적
+    section("MONTHLY PAYMENT", "월 납부금", "금융조건을 누르면 견적이 바로 바뀌어요.", cls="dc-sec")
     fquotes = {fo["id"]: build_quote(car["price"], fo["id"]) for fo in data.FINANCE_OPTIONS}
     fcols = st.container(key="cmprow").columns(3)
     for i, fo in enumerate(data.FINANCE_OPTIONS):
@@ -1170,16 +1042,67 @@ def render_result():
             if card_button(f"cmp_{fo['id']}", html):
                 st.session_state.finance_id = fo["id"]
                 st.rerun()
-    st.markdown(f'<div class="dc-callout blue" style="margin-top:0;">{finance_story(car, fquotes)}</div>',
-                unsafe_allow_html=True)
     st.markdown('<div class="dc-lbl">약정기간</div>', unsafe_allow_html=True)
     seg([24, 36, 48, 60, 72], "term_months", "w_res_term", fmt=lambda m: f"{m}개월", label="약정기간")
+    quote_card(build_quote(car["price"]))
 
-    # 8) 견적
-    quote_card(build_quote(car["price"]), extra_tiles=[("취향 매칭률", f"{data.match_percent(car, q1, q2, q3)}%")])
-
-    if st.button("차량 만나보기 →", type="primary", use_container_width=True):
+    if st.button("색상·옵션 고르고 상담 신청하기 →", type="primary", use_container_width=True):
         go(5)
+
+    # 3) 추천 이유
+    section("WHY THIS CAR", f"{car['model']}, 이래서 추천해요", "", cls="dc-sec")
+    with st.spinner("추천 이유를 정리하고 있어요…"):
+        text, is_ai = recommendation_text(car)
+    badge = '<span class="dc-ai">AI 추천 설명</span>' if is_ai else ""
+    items = "".join(
+        f'<div class="dc-whyi"><div class="n">{r["n"]}</div><div class="tx"><b>‘{r["answer"]}’</b>'
+        f'<span class="dc-fit f{r["score"]}">{r["label"]}</span>'
+        f'<div class="need">{r["need"]}을(를) 원하셨어요</div>→ {r["trait"]}</div></div>'
+        for r in reason_items(car, q1, q2, q3))
+    st.markdown(
+        '<div class="dc-card"><div class="dc-ebrow"><span class="dc-eb">추천 근거 3가지' + badge + '</span></div>'
+        f'<div class="dc-why" style="margin-top:8px;">{text}</div>'
+        + ('<p class="dc-note">※ AI가 작성한 설명이며 실제 상품 조건과 다를 수 있어요.</p>' if is_ai else "")
+        + f'<div style="margin-top:8px;">{items}</div></div>',
+        unsafe_allow_html=True,
+    )
+
+    # 4) 더 보기 (비교표 · 6~10위 · 참고)
+    with st.expander("다른 후보와 더 비교해 보기"):
+        head = "".join(f'<th class="{"hl" if rc["id"] == car["id"] else ""}">{rc["model"]}</th>' for rc in top5)
+        qs = [build_quote(rc["price"]) for rc in top5]
+
+        def row(label, vals):
+            cells = "".join(f'<td class="{"hl" if rc["id"] == car["id"] else ""}">{v}</td>' for rc, v in zip(top5, vals))
+            return f"<tr><td>{label}</td>{cells}</tr>"
+
+        table = (
+            '<div class="dc-tblwrap"><table class="dc-tbl"><tr><th></th>' + head + "</tr>"
+            + row("차급", [rc["segment"] for rc in top5])
+            + row("연료 · 승차", [f'{rc["fuel"]} · {rc["seats"]}' for rc in top5])
+            + row("차량가", [data.fmt_10k(rc["price"]) for rc in top5])
+            + row("원금", [data.fmt_10k(x["principal"]) for x in qs])
+            + row("월 납부금", [f'<b>{x["monthly"]:,.1f}만원</b>' for x in qs])
+            + row("취향 매칭률", [f'{data.match_percent(rc, q1, q2, q3)}%' for rc in top5])
+            + "</table></div>"
+        )
+        st.markdown(table, unsafe_allow_html=True)
+        st.markdown('<div class="dc-hint">표는 옆으로 넘길 수 있어요 →</div>', unsafe_allow_html=True)
+        st.markdown('<div class="dc-lbl">6~10위 후보</div>', unsafe_allow_html=True)
+        for rc in more:
+            sel = " sel" if rc["id"] == car["id"] else ""
+            html = (f'<div class="dc-card row{sel}"><div class="rk">{rank_of[rc["id"]]}</div>'
+                    f'<div class="nm">{rc["brand"]} {rc["model"]}<span>{rc["segment"]} · {rc["fuel"]} · {rc["seats"]}</span></div>'
+                    f'<div class="mt">{data.match_percent(rc, q1, q2, q3)}%</div><div class="pr">{data.fmt_10k(rc["price"])}</div></div>')
+            if card_button(f"more_{rc['id']}", html):
+                st.session_state.selected_car_id = rc["id"]
+                st.rerun()
+        news = "https://search.naver.com/search.naver?where=news&query=" + urllib.parse.quote(f"{car['model']} 신차")
+        st.markdown(f'<div class="dc-callout"><b>이런 점은 참고하세요</b><br>{car["watch"]}</div>'
+                    f'<div class="dc-callout blue">{car["model"]}의 최신 소식이 궁금하다면 '
+                    f'<a href="{news}" target="_blank" rel="noopener">최신 뉴스 검색 ↗</a></div>',
+                    unsafe_allow_html=True)
+
     c1, c2 = st.columns(2)
     if c1.button("추천 다시 받기", use_container_width=True):
         for k in ("q1", "q2", "q3", "selected_car_id"):
@@ -1196,7 +1119,7 @@ def render_result():
 def render_detail():
     page_head(5)
     q1, q2, q3 = st.session_state.q1, st.session_state.q2, st.session_state.q3
-    top_ids = [r["id"] for r in data.rank_cars(q1, q2, q3, st.session_state.finance_id)[:10]]
+    top_ids = [r["id"] for r in data.rank_cars(q1, q2, q3)[:10]]
     if st.session_state.selected_car_id not in top_ids:
         st.session_state.selected_car_id = top_ids[0]
     car = data.get_car_by_id(st.session_state.selected_car_id)
@@ -1207,7 +1130,7 @@ def render_detail():
     section("MEET YOUR DREAM CAR", f"{car['brand']} {car['model']}", car["desc"])
 
     with st.expander("추천 차량 · 금융조건 다시 선택하기"):
-        recs = data.rank_cars(q1, q2, q3, st.session_state.finance_id)[:5]
+        recs = data.rank_cars(q1, q2, q3)[:5]
         if st.session_state.selected_car_id not in [r["id"] for r in recs]:
             recs = recs + [data.get_car_by_id(st.session_state.selected_car_id)]
         st.markdown('<div class="dc-lbl">추천 차량 (TOP 5)</div>', unsafe_allow_html=True)
@@ -1294,7 +1217,6 @@ ROUTES = {
     0: render_intro,
     1: render_used_car,
     2: render_taste,
-    3: render_finance,
     4: render_result,
     5: render_detail,
 }
