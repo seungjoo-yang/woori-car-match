@@ -68,6 +68,16 @@ header[data-testid="stHeader"],#MainMenu,footer,[data-testid="stToolbar"],[data-
 .dc-chip.todo{background:transparent;color:var(--text-subtle);}
 .dc-chip.now{background:rgba(255,255,255,.14);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);}
 
+/* 이동 가능한 STEP 탭 (모바일에서도 한 줄 유지) */
+.st-key-dcsteps{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:6px;margin-bottom:22px;}
+.st-key-dcsteps [data-testid="stHorizontalBlock"]{flex-wrap:nowrap!important;gap:6px!important;}
+.st-key-dcsteps [data-testid="stColumn"]{min-width:0!important;flex:1 1 0!important;width:auto!important;}
+[class*="st-key-card_nav"]{margin-bottom:0!important;}
+.dc-chip .sh{display:none;}
+.dc-chip.done{cursor:pointer;transition:all .15s ease;}
+[class*="st-key-card_nav"]:hover .dc-chip.done{background:rgba(96,165,250,.32);color:#fff;}
+[class*="st-key-card_nav"]:hover .dc-card{transform:none;}
+
 /* 카드 (유리 카드 + 보라 선택 글로우) */
 .dc-card{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:22px 24px;transition:all .15s ease;}
 .dc-card.sel{border-color:var(--violet);box-shadow:0 0 24px var(--violet-glow);}
@@ -212,6 +222,21 @@ div[data-testid="stForm"]{background:var(--surface);border:1px solid var(--borde
 .dc-disclaimer{color:var(--text-subtle);font-size:.8rem;line-height:1.55;margin-top:22px;text-align:center;}
 
 @media (max-width:640px){
+  .dc-chip .fl{display:none;} .dc-chip .sh{display:block;}
+  .dc-chip{padding:8px 2px;} .dc-chip b{font-size:.66rem;letter-spacing:.02em;} .dc-chip span{font-size:.72rem;margin-top:1px;}
+  .st-key-dcsteps{padding:4px;} .st-key-dcsteps [data-testid="stHorizontalBlock"]{gap:4px!important;}
+  .st-key-top3row [data-testid="stHorizontalBlock"]{flex-wrap:nowrap!important;overflow-x:auto;scroll-snap-type:x mandatory;
+    gap:10px!important;padding-bottom:6px;-webkit-overflow-scrolling:touch;}
+  .st-key-top3row [data-testid="stColumn"]{flex:0 0 76%!important;min-width:76%!important;scroll-snap-align:start;}
+  .st-key-cmprow [data-testid="stHorizontalBlock"]{flex-wrap:nowrap!important;gap:8px!important;}
+  .st-key-cmprow [data-testid="stColumn"]{min-width:0!important;flex:1 1 0!important;}
+  .dc-card.cmp{padding:14px 6px;} .dc-card.cmp .mo{font-size:1.25rem;} .dc-card.cmp .mo small{font-size:.7rem;display:block;}
+  .dc-card.fork{min-height:0;} .dc-card.opt{min-height:0;padding:16px 16px;}
+  table.dc-tbl{min-width:0;table-layout:fixed;}
+  table.dc-tbl th,table.dc-tbl td{padding:9px 3px;font-size:.74rem;word-break:keep-all;overflow-wrap:anywhere;}
+  table.dc-tbl th:first-child,table.dc-tbl td:first-child{width:21%;padding-left:8px;}
+  .block-container{padding:.8rem .75rem 4rem;}
+  h2.dc-h2{font-size:1.25rem;}
   .dc-hero{padding:30px 22px 22px;} .dc-hero h1.t{font-size:1.7rem;}
   .dc-persona{flex-direction:column;align-items:stretch;} .dc-persona .im{width:100%;}
   .dc-grid{grid-template-columns:repeat(2,1fr);} .dc-quote .big{font-size:2.2rem;}
@@ -229,6 +254,7 @@ defaults = {
     "step": 0,
     "q_sub": 0,
     "has_car": None,
+    "car_confirmed": False,
     "used_brand": None,
     "used_model": None,
     "used_year": None,
@@ -278,23 +304,55 @@ def topbar():
     )
 
 
+def reachable(app_step: int) -> bool:
+    """해당 단계에 필요한 데이터가 이미 있어서 이동 가능한지."""
+    ss = st.session_state
+    answered = all(ss[k] is not None for k in ("q1", "q2", "q3"))
+    if app_step == 1:
+        return ss.has_car is True
+    started = ss.has_car is False or (ss.has_car is True and ss.car_confirmed)
+    if app_step == 2:
+        return started
+    if app_step == 3:
+        return started and answered
+    if app_step == 4:
+        return started and answered and ss.finance_id is not None
+    if app_step == 5:
+        return reachable(4)
+    return False
+
+
+STEP_FULL = ["내 차 가치 확인", "라이프스타일 분석", "금융조건 선택", "드림카 추천·견적", "차량 만나보기"]
+STEP_SHORT = ["내 차", "취향", "금융", "추천·견적", "만나보기"]
+
+
 def step_chips(step_idx: int):
-    """step_idx: 앱 단계(0=시작, 1=보유차량, 2=취향, 3=금융, 4=추천·견적, 5=만나보기)."""
-    labels = ["내 차 가치 확인", "라이프스타일 분석", "금융조건 선택", "드림카 추천·견적", "차량 만나보기"]
-    offset = 1
+    """step_idx: 앱 단계(0=시작, 1=보유차량, 2=취향, 3=금융, 4=추천·견적, 5=만나보기).
+    시작 화면은 안내용 표시만, 그 외 화면은 이동 가능한 단계(데이터가 이미 있는 단계)를 눌러서 이동할 수 있다."""
+    app_steps = [1, 2, 3, 4, 5]
     if st.session_state.has_car is False:
-        labels = labels[1:]
-        offset = 2
-    cur = -1 if step_idx <= 0 else step_idx - offset
-    chips = []
-    for i, label in enumerate(labels):
-        cls = "dc-chip"
-        if cur >= 0 and i > cur:
-            cls += " todo"
-        if i == cur:
-            cls += " now"
-        chips.append(f'<div class="{cls}"><b>STEP {i + 1:02d}</b><span>{label}</span></div>')
-    st.markdown(f'<div class="dc-steps">{"".join(chips)}</div>', unsafe_allow_html=True)
+        app_steps = [2, 3, 4, 5]
+    idxs = [a - 1 for a in app_steps]
+
+    def chip_html(pos, a, cls):
+        return (f'<div class="dc-chip {cls}"><b>STEP {pos + 1:02d}</b>'
+                f'<span class="fl">{STEP_FULL[a - 1]}</span><span class="sh">{STEP_SHORT[a - 1]}</span></div>')
+
+    if step_idx <= 0:
+        st.markdown('<div class="dc-steps">' + "".join(chip_html(i, a, "") for i, a in enumerate(app_steps)) + "</div>",
+                    unsafe_allow_html=True)
+        return
+    with st.container(key="dcsteps"):
+        cols = st.columns(len(app_steps))
+        for i, a in enumerate(app_steps):
+            with cols[i]:
+                if a == step_idx:
+                    st.markdown(chip_html(i, a, "now"), unsafe_allow_html=True)
+                elif reachable(a):
+                    if card_button(f"nav_{a}", chip_html(i, a, "done")):
+                        go(a)
+                else:
+                    st.markdown(chip_html(i, a, "todo"), unsafe_allow_html=True)
 
 
 def page_head(step_idx: int):
@@ -660,6 +718,7 @@ def render_used_car():
     if n1.button("← 처음으로", use_container_width=True):
         go(0)
     if n2.button("라이프스타일 분석 시작 →", type="primary", use_container_width=True):
+        st.session_state.car_confirmed = True
         go(2)
     disclaimer()
 
@@ -683,19 +742,22 @@ def render_taste():
 
     selected = st.session_state.get(q["key"])
     descs = data.QUESTION_DESCS[q_sub]
-    cols = st.columns(2)
-    for i, opt in enumerate(q["options"]):
-        with cols[i % 2]:
-            sel = " sel" if selected == i else ""
-            html = (f'<div class="dc-card opt{sel}"><div class="lt">{"ABCD"[i]}</div><div>'
-                    f'<div class="tt">{opt}</div><div class="ds">{descs[i]}</div></div></div>')
-            if card_button(f"q{q_sub}_{i}", html):
-                st.session_state[q["key"]] = i
-                if q_sub < 2:
-                    st.session_state.q_sub += 1
-                    st.rerun()
-                else:
-                    go(3)
+    for pair in range(0, len(q["options"]), 2):
+        cols = st.columns(2)   # 행 단위로 만들어야 휴대폰(세로 쌓임)에서도 A→B→C→D 순서가 유지된다
+        for j in range(2):
+            i = pair + j
+            opt = q["options"][i]
+            with cols[j]:
+                sel = " sel" if selected == i else ""
+                html = (f'<div class="dc-card opt{sel}"><div class="lt">{"ABCD"[i]}</div><div>'
+                        f'<div class="tt">{opt}</div><div class="ds">{descs[i]}</div></div></div>')
+                if card_button(f"q{q_sub}_{i}", html):
+                    st.session_state[q["key"]] = i
+                    if q_sub < 2:
+                        st.session_state.q_sub += 1
+                        st.rerun()
+                    else:
+                        go(3)
 
     if st.button("← 이전", use_container_width=True):
         if q_sub == 0:
@@ -754,7 +816,8 @@ def render_result():
     section("DREAM CAR TOP 3", "당신에게 가장 잘 맞는 드림카 TOP 3",
             f"총 {len(data.NEW_CAR_RECS)}개 차종을 비교해 가장 적합한 3대만 추천했어요. 카드를 눌러 견적을 바꿔 보세요.",
             cls="dc-sec")
-    cols = st.columns(3)
+    top3_box = st.container(key="top3row")
+    cols = top3_box.columns(3)
     for i, rc in enumerate(recs):
         sel = " sel" if rc["id"] == car["id"] else ""
         u = car_rep_uri(rc)
@@ -809,7 +872,7 @@ def render_result():
 
     # 5) 금융 3종 비교 (카드 선택)
     section("FINANCE COMPARE", f"{car['model']} · 금융조건별 월 납부금", "카드를 누르면 아래 견적이 바뀌어요.", cls="dc-sec")
-    fcols = st.columns(3)
+    fcols = st.container(key="cmprow").columns(3)
     for i, fo in enumerate(data.FINANCE_OPTIONS):
         fq = build_quote(car["price"], fo["id"])
         sel = " sel" if st.session_state.finance_id == fo["id"] else ""
@@ -843,11 +906,11 @@ def render_result():
 # ---------------------------------------------------------------------------
 def render_detail():
     page_head(5)
-    car = data.get_car_by_id(st.session_state.selected_car_id)
-    if car is None:
-        go(4)
-        return
     q1, q2, q3 = st.session_state.q1, st.session_state.q2, st.session_state.q3
+    top_ids = [r["id"] for r in data.recommend_cars(q1, q2, q3, top_n=3)]
+    if st.session_state.selected_car_id not in top_ids:
+        st.session_state.selected_car_id = top_ids[0]
+    car = data.get_car_by_id(st.session_state.selected_car_id)
     if st.session_state.get("last_detail_car") != car["id"]:
         st.session_state.last_detail_car = car["id"]
         st.session_state.selected_color_idx = 0
