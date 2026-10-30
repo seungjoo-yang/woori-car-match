@@ -14,7 +14,11 @@ from email.mime.text import MIMEText
 import streamlit as st
 import streamlit.components.v1 as components
 
+import importlib
+
 import data
+
+data = importlib.reload(data)   # 배포 직후 data.py 가 이전 버전으로 캐시돼 있어도 항상 최신 값을 쓰도록 한다
 
 st.set_page_config(page_title="나에게 맞는 차량 찾기 | 우리금융캐피탈", page_icon=":material/directions_car:", layout="wide")
 
