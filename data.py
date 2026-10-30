@@ -412,29 +412,32 @@ def calc_installment(principal_10k: float, months: int = DEFAULT_TERM_MONTHS, an
 
 
 def calc_lease(price_10k: float, months: int = DEFAULT_TERM_MONTHS, residual_rate: float = 0.50,
-                annual_rate: float = 0.06) -> float:
-    """리스 월 납부금(만원). 잔존가치 기반 단순 산식."""
+                annual_rate: float = 0.06, net_price_10k: float = None) -> float:
+    """리스 월 납부금(만원). 잔존가치는 차량가 기준, 상환 대상은 원금(차량가 − 중고차 판매가) 기준."""
+    net = price_10k if net_price_10k is None else net_price_10k
     residual = price_10k * residual_rate
-    depreciation = (price_10k - residual) / months
-    finance_charge = (price_10k + residual) * (annual_rate / 12) / 2
+    depreciation = max(net - residual, 0) / months
+    finance_charge = (net + residual) * (annual_rate / 12) / 2
     return depreciation + finance_charge
 
 
 def calc_rent(price_10k: float, months: int = DEFAULT_TERM_MONTHS, residual_rate: float = 0.45,
-              annual_rate: float = 0.065, service_fee_rate: float = 0.08) -> float:
+              annual_rate: float = 0.065, service_fee_rate: float = 0.08,
+              net_price_10k: float = None) -> float:
     """렌트 월 납부금(만원). 리스 산식에 정비/보험 등 서비스 비용을 가산."""
-    base = calc_lease(price_10k, months, residual_rate, annual_rate)
+    base = calc_lease(price_10k, months, residual_rate, annual_rate, net_price_10k)
     return base * (1 + service_fee_rate)
 
 
 def calc_monthly_payment(finance_id: str, principal_10k: float, full_price_10k: float,
                           months: int = DEFAULT_TERM_MONTHS) -> float:
+    """principal_10k = 차량가 − 중고차 판매가 (차량이 없으면 차량가 전액)."""
     if finance_id == "installment":
         return calc_installment(principal_10k, months)
     elif finance_id == "lease":
-        return calc_lease(full_price_10k, months)
+        return calc_lease(full_price_10k, months, net_price_10k=principal_10k)
     elif finance_id == "rent":
-        return calc_rent(full_price_10k, months)
+        return calc_rent(full_price_10k, months, net_price_10k=principal_10k)
     return 0.0
 
 

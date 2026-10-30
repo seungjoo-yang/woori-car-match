@@ -116,6 +116,7 @@ st.markdown(
 defaults = {
     "step": 0,
     "q_sub": 0,
+    "has_car": None,
     "used_brand": None,
     "used_model": None,
     "used_year": None,
@@ -146,6 +147,14 @@ def reset_all():
     st.rerun()
 
 
+def trade_in_price() -> int:
+    """보유 차량이 있으면 중고차 시세(만원), 없으면 0."""
+    if not st.session_state.has_car:
+        return 0
+    return data.get_used_price(st.session_state.used_brand, st.session_state.used_model,
+                               st.session_state.used_year)
+
+
 # ---------------------------------------------------------------------------
 # 공통 컴포넌트
 # ---------------------------------------------------------------------------
@@ -162,10 +171,14 @@ def header():
 
 
 def progress_bar(main_step_idx):
-    total = len(STEP_LABELS)
+    labels = STEP_LABELS
+    if not st.session_state.has_car:
+        labels = STEP_LABELS[1:]
+        main_step_idx -= 1
+    total = len(labels)
     st.progress((main_step_idx + 1) / total)
     cols = st.columns(total)
-    for i, label in enumerate(STEP_LABELS):
+    for i, label in enumerate(labels):
         style = "font-weight:700;color:#003876;" if i == main_step_idx else "color:#a3a8b0;"
         cols[i].markdown(f"<div style='text-align:center;font-size:0.78rem;{style}'>{label}</div>",
                           unsafe_allow_html=True)
@@ -254,15 +267,19 @@ def render_car_image(car_id: str, color: dict):
 
 def price_breakdown_card(car, used_price):
     principal = max(car["price"] - used_price, 0)
+    if st.session_state.has_car:
+        rows = (
+            f'<div class="price-row"><span>신차 가격 (원가)</span><span>{data.fmt_10k(car["price"])}</span></div>'
+            f'<div class="price-row"><span>내 차 중고 판매가 (−)</span><span>-{data.fmt_10k(used_price)}</span></div>'
+            f'<div class="price-row total"><span>원금 (차량가 − 중고차 판매가)</span><span>{data.fmt_10k(principal)}</span></div>'
+        )
+    else:
+        rows = (
+            f'<div class="price-row"><span>신차 가격 (원가)</span><span>{data.fmt_10k(car["price"])}</span></div>'
+            f'<div class="price-row total"><span>원금 (차량가 전액)</span><span>{data.fmt_10k(principal)}</span></div>'
+        )
     st.markdown('<div class="car-card">', unsafe_allow_html=True)
-    st.markdown(
-        f"""
-        <div class="price-row"><span>신차 가격 (원가)</span><span>{data.fmt_10k(car['price'])}</span></div>
-        <div class="price-row"><span>보유 차량 보상판매가 (−)</span><span>-{data.fmt_10k(used_price)}</span></div>
-        <div class="price-row total"><span>실 부담 금액</span><span>{data.fmt_10k(principal)}</span></div>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.markdown(rows, unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
     return principal
 
@@ -287,18 +304,23 @@ def send_consultation_email(payload: dict):
     except Exception:
         return False, "이메일 발송 기능이 아직 설정되지 않았습니다. (관리자: Streamlit Secrets에 GMAIL_USER / GMAIL_APP_PASSWORD 설정 필요)"
 
-    body = "\n".join([
+    lines = [
         f"신청자: {payload['name']} ({payload['phone']})",
         "",
         f"관심 차량: {payload['car_brand']} {payload['car_model']} - {payload['color_name']}",
         f"트림: {payload['trim_name']} / 휠: {payload['wheel_name']}",
         f"금융조건: {payload['finance_name']} · {payload['term']}개월",
         f"총 차량 가격: {payload['total_price']}",
-        f"예상 월 납부금: {payload['monthly']}",
-        "",
-        f"하차예정(보유) 차량: {payload['used_brand']} {payload['used_model']} ({payload['used_year']}년)",
-        f"예상 보상판매가: {payload['used_price']}",
-    ])
+    ]
+    if payload["has_car"]:
+        lines += [
+            f"보유 차량: {payload['used_brand']} {payload['used_model']} ({payload['used_year']}년)",
+            f"예상 중고차 판매가: {payload['used_price']}",
+        ]
+    else:
+        lines.append("보유 차량: 없음")
+    lines += [f"원금: {payload['principal']}", f"예상 월 납부금: {payload['monthly']}"]
+    body = "\n".join(lines)
     msg = MIMEText(body)
     msg["Subject"] = f"[차량매칭 체험존] 상담신청 - {payload['car_brand']} {payload['car_model']}"
     msg["From"] = gmail_user
@@ -320,17 +342,24 @@ def render_intro():
     header()
     st.markdown("### 👋 환영합니다")
     st.write(
-        "내 차량 정보와 취향, 그리고 원하는 금융조건을 알려주시면 "
-        "우리금융캐피탈이 꼭 맞는 차량과 합리적인 월 납부금을 추천해 드립니다."
+        "내 취향과 원하는 금융조건을 알려주시면 우리금융캐피탈이 꼭 맞는 차량과 "
+        "합리적인 월 납부금을 추천해 드립니다. 타고 계신 차가 있다면 중고 시세까지 반영해 드려요."
     )
     st.write("")
-    c1, c2, c3 = st.columns(3)
-    c1.markdown("**1️⃣ 보유 차량 선택**\n\n브랜드·차종·연식")
-    c2.markdown("**2️⃣ 취향 질문 3가지**\n\n나에게 맞는 차량 매칭")
-    c3.markdown("**3️⃣ 금융조건 선택**\n\n할부 · 리스 · 렌트")
-    st.write("")
-    if st.button("시작하기 →", type="primary", use_container_width=True):
+    st.markdown("#### 지금 타고 계신 차가 있으신가요?")
+    st.caption("카드를 누르면 바로 시작됩니다")
+    if st.button("🚘 **내 차가 있어요**\n\n내 차 시세를 확인하고, 그만큼 반영해서 새 차를 추천받아요",
+                 key="fork_has_car", type="primary", use_container_width=True):
+        st.session_state.has_car = True
         go(1)
+    st.write("")
+    if st.button("✨ **차량이 없어요**\n\n바로 취향을 알려주고 새 차를 추천받아요",
+                 key="fork_no_car", type="secondary", use_container_width=True):
+        st.session_state.has_car = False
+        st.session_state.used_brand = None
+        st.session_state.used_model = None
+        st.session_state.used_year = None
+        go(2)
     disclaimer()
 
 
@@ -340,7 +369,8 @@ def render_intro():
 def render_used_car():
     header()
     progress_bar(0)
-    st.markdown("#### 🚙 현재 보유 중인 차량을 선택해 주세요")
+    st.markdown("#### 🚙 현재 보유 중인 차량 정보를 선택해 주세요")
+    st.caption("브랜드 · 차종 · 연식을 기준으로 예상 중고차 시세를 확인해 드려요")
 
     brands = list(data.USED_CAR_DB.keys())
     brand = st.selectbox("브랜드", brands, index=brands.index(st.session_state.used_brand)
@@ -363,7 +393,7 @@ def render_used_car():
 
     used_price = data.get_used_price(brand, model, year)
     segment = data.USED_CAR_DB[brand][model]["segment"]
-    st.info(f"**{brand} {model} ({year}년, {segment})** 예상 보상판매가 **{data.fmt_10k(used_price)}**")
+    st.info(f"**{brand} {model} ({year}년, {segment})** 예상 중고차 판매가 **{data.fmt_10k(used_price)}**")
 
     st.write("")
     c1, c2 = st.columns([1, 3])
@@ -392,7 +422,7 @@ def render_taste():
     c1, c2 = st.columns([1, 3])
     if q_sub == 0:
         if c1.button("← 이전 단계", use_container_width=True):
-            go(1)
+            go(1 if st.session_state.has_car else 0)
     else:
         if c1.button("← 이전 질문", use_container_width=True):
             st.session_state.q_sub -= 1
@@ -450,8 +480,7 @@ def render_result():
     if st.session_state.selected_car_id not in [c["id"] for c in recs]:
         st.session_state.selected_car_id = recs[0]["id"]
 
-    used_price = data.get_used_price(st.session_state.used_brand, st.session_state.used_model,
-                                      st.session_state.used_year)
+    used_price = trade_in_price()
 
     st.markdown("#### ✨ 취향 분석 결과, 이런 차량을 추천드려요")
     st.caption("카드를 눌러 추천 차량을 바꿔볼 수 있어요")
@@ -581,21 +610,28 @@ def render_detail():
     st.session_state.selected_wheel_id = wheel["id"]
 
     st.write("")
-    used_price = data.get_used_price(st.session_state.used_brand, st.session_state.used_model,
-                                      st.session_state.used_year)
+    used_price = trade_in_price()
     total_price = car["price"] + trim["price_delta"] + wheel["price_delta"]
     principal = max(total_price - used_price, 0)
     monthly = data.calc_monthly_payment(st.session_state.finance_id, principal, total_price,
                                          st.session_state.term_months)
     finance_name = next(f["name"] for f in data.FINANCE_OPTIONS if f["id"] == st.session_state.finance_id)
+    if st.session_state.has_car:
+        principal_rows = (
+            f'<div class="price-row"><span>내 차 중고 판매가 (−)</span><span>-{data.fmt_10k(used_price)}</span></div>'
+            f'<div class="price-row"><span>원금 (차량가 − 중고차 판매가)</span><span>{data.fmt_10k(principal)}</span></div>'
+        )
+    else:
+        principal_rows = (
+            f'<div class="price-row"><span>원금 (차량가 전액)</span><span>{data.fmt_10k(principal)}</span></div>'
+        )
     st.markdown(
         f"""
         <div class="car-card">
             <div class="price-row"><span>차량 기본가</span><span>{data.fmt_10k(car['price'])}</span></div>
             <div class="price-row"><span>트림 · 휠 추가금</span><span>+{data.fmt_10k(trim['price_delta'] + wheel['price_delta'])}</span></div>
             <div class="price-row"><span>총 차량 가격</span><span>{data.fmt_10k(total_price)}</span></div>
-            <div class="price-row"><span>보유 차량 보상판매가 (−)</span><span>-{data.fmt_10k(used_price)}</span></div>
-            <div class="price-row"><span>실 부담 금액</span><span>{data.fmt_10k(principal)}</span></div>
+            {principal_rows}
             <div class="price-row"><span>금융조건</span><span>{finance_name} · {st.session_state.term_months}개월</span></div>
             <div class="price-row total"><span>예상 월 납부금</span><span>월 {data.fmt_10k(monthly)}</span></div>
         </div>
@@ -625,10 +661,12 @@ def render_detail():
                     "term": st.session_state.term_months,
                     "total_price": data.fmt_10k(total_price),
                     "monthly": f"월 {data.fmt_10k(monthly)}",
+                    "has_car": bool(st.session_state.has_car),
                     "used_brand": st.session_state.used_brand,
                     "used_model": st.session_state.used_model,
                     "used_year": st.session_state.used_year,
                     "used_price": data.fmt_10k(used_price),
+                    "principal": data.fmt_10k(principal),
                 }
                 ok, result_msg = send_consultation_email(payload)
                 if ok:
