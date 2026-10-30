@@ -17,6 +17,7 @@ st.set_page_config(page_title="나에게 맞는 차량 찾기 | 우리금융캐�
 
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets", "cars")
 IMAGE_EXTS = ("jpg", "jpeg", "png", "webp", "avif")
+DOMESTIC_BRANDS = {"현대", "기아", "제네시스", "쉐보레", "KG모빌리티", "르노코리아"}
 
 # ---------------------------------------------------------------------------
 # 스타일 (AI LAB 메인 + STOCK:ON 페이지의 다크 글래스 스타일)
@@ -255,6 +256,7 @@ defaults = {
     "q_sub": 0,
     "has_car": None,
     "car_confirmed": False,
+    "used_origin": "국산",
     "used_brand": None,
     "used_model": None,
     "used_year": None,
@@ -385,11 +387,17 @@ def seg(options, state_key: str, widget_key: str, fmt=str, label="선택"):
     if cur not in options:
         cur = options[0]
         st.session_state[state_key] = cur
-    st.session_state[widget_key] = cur
+    # 값이 바깥에서 바뀌었거나 위젯이 처음 그려질 때만 위젯 값을 맞춘다.
+    # (매번 덮어쓰면 사용자가 방금 누른 선택이 무시된다)
+    sync_key = widget_key + "__synced"
+    if widget_key not in st.session_state or st.session_state.get(sync_key) != cur:
+        st.session_state[widget_key] = cur
+        st.session_state[sync_key] = cur
     val = st.radio(label, options, format_func=fmt, horizontal=True, key=widget_key,
                    label_visibility="collapsed")
     if val != cur:
         st.session_state[state_key] = val
+        st.session_state[sync_key] = val
         st.rerun()
     return val
 
@@ -682,20 +690,18 @@ def render_used_car():
     section("STEP 01 · MY CAR VALUE", "지금 타시는 차를 알려주세요",
             "브랜드 · 차종 · 연식을 기준으로 예상 중고차 판매가를 확인해 드려요.")
 
-    brands = list(data.USED_CAR_DB.keys())
-    c1, c2, c3 = st.columns(3)
-    brand = c1.selectbox("브랜드", brands, index=brands.index(st.session_state.used_brand)
-                         if st.session_state.used_brand in brands else 0, key="sb_brand")
+    st.markdown('<div class="dc-lbl">① 제조사</div>', unsafe_allow_html=True)
+    origin = seg(["국산", "수입"], "used_origin", "w_used_origin", label="국산/수입")
+    brands = [b for b in data.USED_CAR_DB if (b in DOMESTIC_BRANDS) == (origin == "국산")]
+    brand = seg(brands, "used_brand", f"w_used_brand_{origin}", label="제조사")
+
     models = list(data.USED_CAR_DB[brand].keys())
-    if st.session_state.used_model not in models:
-        st.session_state.used_model = models[0]
-    model = c2.selectbox("차종", models, index=models.index(st.session_state.used_model), key="sb_model")
-    years = list(data.USED_CAR_DB[brand][model]["years"])
-    if st.session_state.used_year not in years:
-        st.session_state.used_year = years[-1]
-    year = c3.selectbox("연식", years, index=years.index(st.session_state.used_year), key="sb_year",
-                        format_func=lambda y: f"{y}년")
-    st.session_state.used_brand, st.session_state.used_model, st.session_state.used_year = brand, model, year
+    st.markdown('<div class="dc-lbl">② 차종</div>', unsafe_allow_html=True)
+    model = seg(models, "used_model", f"w_used_model_{brand}", label="차종")
+
+    years = sorted(data.USED_CAR_DB[brand][model]["years"], reverse=True)
+    st.markdown('<div class="dc-lbl">③ 연식</div>', unsafe_allow_html=True)
+    year = seg(years, "used_year", f"w_used_year_{brand}_{model}", fmt=lambda y: f"{y}년", label="연식")
 
     info = data.USED_CAR_DB[brand][model]
     used_price = data.get_used_price(brand, model, year)
