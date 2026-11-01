@@ -5,6 +5,8 @@
 금액 단위: 만원
 """
 
+import re
+
 CURRENT_YEAR = 2026
 
 # ---------------------------------------------------------------------------
@@ -89,6 +91,36 @@ def get_used_price(brand: str, model: str, year: int) -> int:
     floor = info["new_price"] * USED_PRICE_FLOOR_RATIO
     price = max(raw, floor)
     return int(round(price / 10) * 10)  # 10만원 단위 반올림
+
+
+_DOMESTIC_BRANDS = {"현대", "기아", "제네시스", "쉐보레", "KG모빌리티", "르노코리아"}
+
+
+_PLATE_RE = re.compile(r"^(?:[가-힣]{2})?(\d{2,3})([가-힣])(\d{4})$")
+
+
+def parse_plate(plate: str):
+    """차량번호를 검증해 표준 표기('123가 4567')로 돌려준다. 형식이 맞지 않으면 None.
+    띄어쓰기·하이픈은 무시하고, 구형 지역명 번호판(서울12가3456)도 받아 지역명은 떼어낸다."""
+    t = "".join(ch for ch in str(plate) if not ch.isspace() and ch not in "-_.·")
+    m = _PLATE_RE.match(t)
+    return f"{m.group(1)}{m.group(2)} {m.group(3)}" if m else None
+
+
+def lookup_by_plate(plate: str) -> dict:
+    """차량번호로 보유 차량을 조회한 것처럼 (브랜드, 모델, 연식, 주행거리)를 돌려준다.
+    체험용: 실제 조회 대신 번호 문자열을 해시해 결정하므로 어떤 값을 넣어도 결과가 나오고,
+    같은 번호는 항상 같은 차량·시세가 나온다. 국산 차량이 더 자주 나오도록 가중한다."""
+    import hashlib
+    h = hashlib.sha256((parse_plate(plate) or str(plate)).encode("utf-8")).digest()
+    domestic = h[0] < 205   # 약 80%
+    models = [(b, m) for b, ms in USED_CAR_DB.items() if (b in _DOMESTIC_BRANDS) == domestic for m in ms]
+    brand, model = models[int.from_bytes(h[1:3], "big") % len(models)]
+    years = sorted(USED_CAR_DB[brand][model]["years"])
+    year = years[int.from_bytes(h[3:5], "big") % len(years)]
+    age = max(CURRENT_YEAR - year, 0)
+    km = int((age * 11000 + 3000 + (int.from_bytes(h[5:7], "big") % 6000)) // 100 * 100)
+    return {"brand": brand, "model": model, "year": year, "km": km}
 
 
 # ---------------------------------------------------------------------------

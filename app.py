@@ -3,6 +3,7 @@
 우리금융캐피탈 - 내 차에서 드림카까지 (체험형 데모)
 """
 import base64
+import html
 import json
 import os
 import smtplib
@@ -349,6 +350,11 @@ div[data-testid="stRadio"] label[data-testid="stRadioOption"][data-selected="tru
 .dc-valc .rg{font-size:.76rem;margin-top:3px;color:rgba(255,255,255,.72);}
 .dc-valc .pr{font-size:2rem;font-weight:800;line-height:1.1;white-space:nowrap;text-align:right;}
 .dc-valc .pr small{font-size:.9rem;font-weight:700;}
+.dc-plate{display:flex;align-items:stretch;width:max-content;max-width:100%;margin:14px auto 0;border:2.5px solid #1b2a41;border-radius:10px;background:#fff;overflow:hidden;box-shadow:0 2px 8px rgba(20,33,58,.12);}
+.dc-plate i{width:20px;background:#0067ac;flex:none;}
+.dc-plate span{padding:6px 22px;font-size:1.7rem;font-weight:800;letter-spacing:.06em;color:#1b2a41;line-height:1.2;white-space:nowrap;}
+.st-key-plate_input input{font-size:1.15rem;font-weight:700;text-align:center;letter-spacing:.04em;}
+.st-key-stickynav button:disabled{background:#dfe6f0!important;color:#8a97ab!important;box-shadow:none!important;border-color:transparent!important;}
 [data-testid="stLayoutWrapper"]:has(> .st-key-stickynav){position:sticky;bottom:0;z-index:30;}
 .st-key-stickynav{padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));
   background:linear-gradient(180deg,rgba(243,246,251,0),rgba(243,246,251,.96) 28%);backdrop-filter:blur(6px);}
@@ -416,7 +422,9 @@ defaults = {
     "q_sub": 0,
     "has_car": None,
     "car_confirmed": False,
-    "used_origin": "국산",
+    "used_plate": "",
+    "plate_input": "",
+    "used_km": None,
     "used_brand": None,
     "used_model": None,
     "used_year": None,
@@ -857,6 +865,7 @@ def send_consultation_email(payload: dict):
     ]
     if payload["has_car"]:
         lines += [
+            f"차량번호: {payload.get('used_plate') or '-'} (체험용 임의 조회값)",
             f"보유 차량: {payload['used_brand']} {payload['used_model']} ({payload['used_year']}년)",
             f"예상 중고차 판매가: {payload['used_price']}",
         ]
@@ -892,7 +901,7 @@ def render_intro():
     c1, c2 = st.columns(2)
     with c1:
         if card_button("fork_has", '<div class="dc-card fork"><div class="ic">' + ico("key", 26) + '</div><div class="tt">내 차가 있어요</div>'
-                                   '<div class="ds">브랜드·차종·연식으로 예상 중고차 시세를 확인하고, 그만큼 원금에서 빼서 견적을 받아요</div>'
+                                   '<div class="ds">차량번호만 입력하면 예상 중고차 시세를 확인하고, 그만큼 원금에서 빼서 견적을 받아요</div>'
                                    '<div class="go">내 차 시세 확인하기 →</div></div>'):
             st.session_state.has_car = True
             go(1)
@@ -901,6 +910,9 @@ def render_intro():
                                     '<div class="ds">바로 취향을 알려주고 새 차를 추천받아요. 원금은 차량가 전액으로 계산돼요</div>'
                                     '<div class="go">드림카 바로 찾기 →</div></div>'):
             st.session_state.has_car = False
+            st.session_state.used_plate = ""
+            st.session_state.plate_input = ""
+            st.session_state.used_km = None
             st.session_state.used_brand = None
             st.session_state.used_model = None
             st.session_state.used_year = None
@@ -914,43 +926,64 @@ def render_intro():
 # ---------------------------------------------------------------------------
 # STEP 1: 내 차 가치 확인
 # ---------------------------------------------------------------------------
+@st.dialog("차량번호 확인")
+def plate_error_dialog():
+    st.markdown("**차량번호를 정확히 입력해 주세요.**")
+    st.caption("예) 12가 3456 · 123나 4567 (띄어쓰기는 있어도 없어도 돼요)")
+    if st.button("확인", type="primary", use_container_width=True):
+        st.rerun()
+
+
 def render_used_car():
     page_head(1)
-    section("STEP 01 · MY CAR VALUE", "지금 타시는 차를 알려주세요",
-            "브랜드 · 차종 · 연식을 기준으로 예상 중고차 판매가를 확인해 드려요.")
+    section("STEP 01 · MY CAR VALUE", "차량번호를 입력해 주세요",
+            "번호만 넣으면 내 차의 예상 중고차 판매가를 바로 확인해 드려요.")
 
-    st.markdown('<div class="dc-lbl">① 제조사</div>', unsafe_allow_html=True)
-    origin = seg(["국산", "수입"], "used_origin", "w_used_origin", label="국산/수입")
-    brands = [b for b in data.USED_CAR_DB if (b in DOMESTIC_BRANDS) == (origin == "국산")]
-    brand = seg(brands, "used_brand", f"w_used_brand_{origin}", label="제조사")
+    # 다른 단계에 다녀온 뒤에도 입력값을 유지하고, 조회된 번호는 띄어쓰기 없이 입력했어도 표준 표기로 보여준다
+    if st.session_state.used_plate and (not st.session_state.plate_input
+                                        or data.parse_plate(st.session_state.plate_input) == st.session_state.used_plate):
+        st.session_state.plate_input = st.session_state.used_plate
+    with st.form("plate_form", border=False):
+        plate_in = st.text_input("차량번호", max_chars=12, key="plate_input",
+                                 placeholder="예) 12가 3456", label_visibility="collapsed")
+        looked = st.form_submit_button("내 차 조회하기", type="primary", use_container_width=True)
+    if looked:
+        plate = data.parse_plate(plate_in)
+        if plate:
+            r = data.lookup_by_plate(plate)
+            ss = st.session_state
+            ss.used_plate = plate
+            ss.used_brand, ss.used_model, ss.used_year, ss.used_km = r["brand"], r["model"], r["year"], r["km"]
+            st.rerun()
+        else:
+            plate_error_dialog()
 
-    models = list(data.USED_CAR_DB[brand].keys())
-    st.markdown('<div class="dc-lbl">② 차종</div>', unsafe_allow_html=True)
-    model = seg(models, "used_model", f"w_used_model_{brand}", label="차종")
-
-    years = sorted(data.USED_CAR_DB[brand][model]["years"], reverse=True)
-    st.markdown('<div class="dc-lbl">③ 연식</div>', unsafe_allow_html=True)
-    year = seg(years, "used_year", f"w_used_year_{brand}_{model}", fmt=lambda y: f"{y}년", label="연식")
-
-    info = data.USED_CAR_DB[brand][model]
-    used_price = data.get_used_price(brand, model, year)
-    age = max(data.CURRENT_YEAR - year, 0)
-    retain = round(100 * used_price / info["new_price"])
-    lo, hi = round(used_price * 0.95), round(used_price * 1.05)
-    st.markdown(
-        '<div class="dc-dark val dc-valc"><div class="l"><div class="dc-eb" style="color:var(--tint);">MY CAR VALUE</div>'
-        f'<div class="nm">{brand} {model} · {year}년식</div>'
-        f'<div class="rg">예상 범위 {lo:,}~{hi:,}만원 · 잔존가치 {retain}%</div></div>'
-        f'<div class="pr">{used_price:,}<small> 만원</small></div></div>'
-        '<p class="dc-note" style="margin-bottom:84px;">예상 중고차 판매가는 신차 견적에서 원금으로 차감돼요.</p>',
-        unsafe_allow_html=True,
-    )
-    # 선택 결과를 보면서도 다음 버튼이 항상 보이도록 하단에 고정
+    ss = st.session_state
+    found = bool(ss.used_plate and ss.used_brand)
+    if found:
+        brand, model, year = ss.used_brand, ss.used_model, ss.used_year
+        info = data.USED_CAR_DB[brand][model]
+        used_price = data.get_used_price(brand, model, year)
+        retain = round(100 * used_price / info["new_price"])
+        lo, hi = round(used_price * 0.95), round(used_price * 1.05)
+        st.markdown(
+            f'<div class="dc-plate"><i></i><span>{html.escape(ss.used_plate)}</span></div>'
+            '<div class="dc-dark val dc-valc"><div class="l"><div class="dc-eb" style="color:var(--tint);">MY CAR VALUE</div>'
+            f'<div class="nm">{brand} {model} · {year}년식</div>'
+            f'<div class="rg">약 {ss.used_km:,}km · 예상 범위 {lo:,}~{hi:,}만원 · 잔존가치 {retain}%</div></div>'
+            f'<div class="pr">{used_price:,}<small> 만원</small></div></div>'
+            '<p class="dc-note" style="margin-bottom:84px;">체험용 예상 시세예요. 예상 중고차 판매가는 신차 견적에서 원금으로 차감돼요.</p>',
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown('<p class="dc-note" style="margin-bottom:84px;">조회 결과는 체험용 예상값이며, 실제 차량 정보와 다를 수 있어요.</p>',
+                    unsafe_allow_html=True)
+    # 결과를 보면서도 다음 버튼이 항상 보이도록 하단에 고정
     with st.container(key="stickynav"):
         n1, n2 = st.columns([1, 2])
         if n1.button("← 처음으로", use_container_width=True):
             go(0)
-        if n2.button("취향 선택하기 →", type="primary", use_container_width=True):
+        if n2.button("취향 선택하기 →", type="primary", use_container_width=True, disabled=not found):
             st.session_state.car_confirmed = True
             go(2)
     disclaimer()
@@ -1199,6 +1232,7 @@ def render_detail():
                     "finance_name": finance_name(), "term": q["term"],
                     "total_price": data.fmt_10k(total_price), "monthly": f"월 {data.fmt_10k(q['monthly'])}",
                     "has_car": bool(st.session_state.has_car),
+                    "used_plate": st.session_state.used_plate,
                     "used_brand": st.session_state.used_brand, "used_model": st.session_state.used_model,
                     "used_year": st.session_state.used_year, "used_price": data.fmt_10k(q["used"]),
                     "principal": data.fmt_10k(q["principal"]),
