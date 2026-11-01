@@ -1230,14 +1230,16 @@ def render_detail():
     quote_card(q, extra_tiles=[("선택 색상", color["name"]), ("트림 · 휠", f'{trim["name"]} · {wheel["name"]}')])
 
     section("CONSULTING", "상담 신청하기", "이름과 연락처를 남기시면 담당자가 확인 후 연락드려요.", cls="dc-sec")
-    with st.form("consult_form", clear_on_submit=True):
-        name = st.text_input("이름")
-        phone = st.text_input("연락처 (휴대폰 번호)", placeholder="010-0000-0000")
+    if st.session_state.pop("_consult_clear", False):   # 접수에 성공했을 때만 입력칸을 비운다 (오류 시에는 입력값 유지)
+        st.session_state.update({"c_name": "", "c_phone": "", "c_agree": False})
+    with st.form("consult_form"):
+        name = st.text_input("이름", key="c_name")
+        phone = st.text_input("연락처 (휴대폰 번호)", placeholder="010-0000-0000", key="c_phone")
         with st.expander(f"{data.PRIVACY_CONSENT_TITLE} 보기"):
             st.markdown("".join(f'<div class="dc-consent"><b>{i}. {t}</b><br>{b}</div>'
                                 for i, (t, b) in enumerate(data.PRIVACY_CONSENT, 1))
                         + f'<p class="dc-note">{data.PRIVACY_CONSENT_NOTE}</p>', unsafe_allow_html=True)
-        agreed = st.checkbox("[필수] 개인정보 수집·이용에 동의합니다.")
+        agreed = st.checkbox("[필수] 개인정보 수집·이용에 동의합니다.", key="c_agree")
         submitted = st.form_submit_button("동의하고 상담 신청하기", type="primary", use_container_width=True)
         if submitted:
             if not name.strip() or not phone.strip():
@@ -1259,7 +1261,13 @@ def render_detail():
                     "principal": data.fmt_10k(q["principal"]),
                 }
                 ok, msg = send_consultation_email(payload)
-                (st.success if ok else st.error)(msg)
+                if ok:
+                    st.session_state["_consult_clear"] = True
+                    st.session_state["_consult_done"] = msg
+                    st.rerun()
+                st.error(msg)
+    if st.session_state.get("_consult_done"):
+        st.success(st.session_state.pop("_consult_done"))
 
     c1, c2 = st.columns(2)
     if c1.button("← 추천 결과로", use_container_width=True):
