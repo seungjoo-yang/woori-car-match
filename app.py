@@ -194,6 +194,9 @@ h2.dc-h2{font-size:1.45rem;font-weight:800;margin:6px 0 6px;padding:0;color:var(
 p.dc-sub{color:var(--text-muted);font-size:.95rem;margin:0 0 14px;line-height:1.6;}
 p.dc-note{color:var(--text-subtle);font-size:.82rem;margin:4px 0 0;}
 .dc-lbl{font-weight:800;font-size:.92rem;color:var(--text);margin:14px 0 6px;}
+.dc-finex{margin:12px 2px 4px;padding:2px 0 2px 12px;border-left:3px solid #bcd3e6;color:var(--text-subtle);font-size:.84rem;line-height:1.6;}
+.dc-finex b{color:var(--text-muted);font-weight:800;}
+.dc-finex span{display:block;margin-top:2px;}
 .dc-sec{margin:26px 0 4px;}
 .dc-dots{display:flex;gap:6px;margin:4px 0 12px;}
 .dc-dots i{height:6px;flex:1;border-radius:99px;background:#d9e1ee;}
@@ -1083,6 +1086,9 @@ def render_result():
             if card_button(f"cmp_{fo['id']}", html):
                 st.session_state.finance_id = fo["id"]
                 st.rerun()
+    cur_fo = next(f for f in data.FINANCE_OPTIONS if f["id"] == st.session_state.finance_id)
+    st.markdown(f'<div class="dc-finex"><b>{cur_fo["name"]}란?</b> {cur_fo["concept"]}<br>'
+                f'<span>{cur_fo["diff"]}</span></div>', unsafe_allow_html=True)
     st.markdown('<div class="dc-lbl">약정기간</div>', unsafe_allow_html=True)
     seg([24, 36, 48, 60, 72], "term_months", "w_res_term", fmt=lambda m: f"{m}개월", label="약정기간")
     quote_card(build_quote(car["price"]))
