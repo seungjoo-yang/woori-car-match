@@ -595,8 +595,8 @@ def match_breakdown(car: dict, q1_idx: int, q2_idx: int, q3_idx: int):
 
 # ---------------------------------------------------------------------------
 # 6) 추천 후보 확장 (총 22종) + 차량 메타(연료/승차/특징/참고사항)
-#    * 신규 12종은 공식 색상명·사진이 아직 없어 예시 색상(화이트/블랙…)으로 두었습니다.
-#      assets/cars/<id>/<color_id>.jpg 로 사진을 넣고 색상명은 실제 값으로 교체해 주세요.
+#    * 신규 12종은 공식 색상명을 EXTRA_CAR_COLORS 에 두었고, 색상별 사진은
+#      assets/cars/<id>/<색상 ID>.jpg 로 넣으면 자동으로 보입니다 (없으면 대표 사진 합성/일러스트로 대체).
 # ---------------------------------------------------------------------------
 
 def _generic_colors():
@@ -610,9 +610,66 @@ def _generic_colors():
     ]
 
 
+# 신규 12종 실제 외장 색상 (국내 공식 색상명 기준, 카눈·카동 가격표 참고). 앞쪽이 대표 색상이다.
+# (색상 ID = 사진 파일명, 색상명, 표시용 HEX)
+EXTRA_CAR_COLORS = {
+    "palisade": [("creamy_white", "크리미 화이트 펄", "#f0e9dc"), ("abyss_black", "어비스 블랙 펄", "#1a1a1a"),
+                 ("ecotronic_gray", "에코트로닉 그레이 펄", "#6b6f63"), ("shimmering_silver", "쉬머링 실버 메탈릭", "#b9bcc0"),
+                 ("classy_blue", "클래지 블루 펄", "#2b3f5c"), ("galaxy_maroon", "갤럭시 마룬 펄", "#5a2330"),
+                 ("castiron_brown", "캐스트아이언 브라운 펄", "#4b3f38"), ("robust_emerald", "로버스트 에메랄드 펄", "#2f4a3f")],
+    "carnival": [("snow_white", "스노우 화이트 펄", "#f5f5f5"), ("aurora_black", "오로라 블랙 펄", "#131313"),
+                 ("ceramic_silver", "세라믹 실버", "#b5b8bb"), ("panthera_metal", "판테라 메탈", "#5d6064"),
+                 ("astra_blue", "아스트라 블루", "#2c4a73"), ("ivory_silver", "아이보리 실버", "#d8d3c5")],
+    "tucson": [("creamy_white", "크리미 화이트 펄", "#f0e9dc"), ("phantom_black", "팬텀 블랙 펄", "#151515"),
+               ("amazon_gray", "아마존 그레이 메탈릭", "#5c6066"), ("shimmering_silver", "쉬머링 실버 메탈릭", "#b9bcc0"),
+               ("ocean_indigo", "오션 인디고 펄", "#243a5a"), ("titan_gray", "티탄 그레이 메탈릭", "#6a6d70"),
+               ("ecotronic_gray", "에코트로닉 그레이 펄", "#6b6f63"), ("ultimate_red", "얼티메이트 레드 메탈릭", "#8a1f2a"),
+               ("pine_green_matte", "파인 그린 매트", "#3d4f44"), ("titanium_gray_matte", "티타늄 그레이 매트", "#77797b")],
+    "sonata": [("serenity_white", "세레니티 화이트 펄", "#f3f3f1"), ("abyss_black", "어비스 블랙 펄", "#1a1a1a"),
+               ("nocturne_gray", "녹턴 그레이 메탈릭", "#5b5e62"), ("transmission_blue", "트랜스미션 블루 펄", "#2a4f7a"),
+               ("ultimate_red", "얼티메이트 레드 메탈릭", "#8a1f2a"), ("biophilic_blue", "바이오 필릭 블루 펄", "#2c5d6b"),
+               ("aero_silver_matte", "에어로 실버 매트", "#b8babd"), ("nocturne_gray_matte", "녹턴 그레이 매트", "#6f7174")],
+    "grandeur": [("serenity_white", "세레니티 화이트 펄", "#f3f3f1"), ("abyss_black", "어비스 블랙 펄", "#1a1a1a"),
+                 ("nocturne_gray", "녹턴 그레이 메탈릭", "#5b5e62"), ("aero_silver", "에어로 실버 메탈릭", "#c0c3c6"),
+                 ("transmission_blue", "트랜스미션 블루 펄", "#2a4f7a"), ("biophilic_blue", "바이오 필릭 블루 펄", "#2c5d6b"),
+                 ("artisanal_burgundy", "아티스널 버건디 펄", "#5a1f2c"), ("transmission_blue_matte", "트랜스미션 블루 매트", "#35577f"),
+                 ("artisanal_burgundy_matte", "아티스널 버건디 매트", "#6a3340"), ("nocturne_gray_matte", "녹턴 그레이 매트", "#6f7174")],
+    "ioniq6": [("serenity_white", "세레니티 화이트 펄", "#f3f3f1"), ("abyss_black", "어비스 블랙 펄", "#1a1a1a"),
+               ("nocturne_gray", "녹턴 그레이 메탈릭", "#5b5e62"), ("aero_silver", "에어로 실버 메탈릭", "#c0c3c6"),
+               ("ultimate_red", "얼티메이트 레드 메탈릭", "#8a1f2a"), ("transmission_blue", "트랜스미션 블루 펄", "#2a4f7a"),
+               ("biophilic_blue", "바이오 필릭 블루 펄", "#2c5d6b"), ("transmission_blue_matte", "트랜스미션 블루 매트", "#35577f"),
+               ("gravity_gold_matte", "그래비티 골드 매트", "#8a7550"), ("nocturne_gray_matte", "녹턴 그레이 매트", "#6f7174")],
+    "ev3": [("snow_white", "스노우 화이트 펄", "#f5f5f5"), ("aurora_black", "오로라 블랙 펄", "#131313"),
+            ("shale_gray", "셰일 그레이", "#6a6d6e"), ("ivory_silver", "아이보리 실버", "#d8d3c5"),
+            ("frost_blue", "프로스트 블루", "#7aa0bd"), ("aventurine_green", "어벤쳐린 그린", "#2f5d4d"),
+            ("ivory_matte_silver", "아이보리 매트 실버", "#cfc9b8")],
+    "ev9": [("snow_white", "스노우 화이트 펄", "#f5f5f5"), ("aurora_black", "오로라 블랙 펄", "#131313"),
+            ("pebble_gray", "페블 그레이", "#8b8e90"), ("panthera_metal", "판테라 메탈", "#5d6064"),
+            ("flare_red", "플레어 레드", "#a1212d"), ("panthera_matte_metal", "판테라 매트 메탈", "#5d6064")],
+    "gv80": [("uyuni_white", "우유니 화이트", "#e9e9e6"), ("seville_silver", "세빌 실버", "#b8babc"),
+             ("vik_black", "비크 블랙", "#17181a"), ("makalu_gray", "마칼루 그레이", "#5a5c5f"),
+             ("ceres_blue", "세레스 블루", "#22344f"), ("bering_blue", "베링 블루", "#2a4a5c"),
+             ("tromso_green", "트롬소 그린", "#2f4a3f"), ("seychelles_beige", "세이셸 베이지", "#cbbba0")],
+    "g70": [("uyuni_white", "우유니 화이트", "#e9e9e6"), ("seville_silver", "세빌 실버", "#b8babc"),
+            ("vik_black", "비크 블랙", "#17181a"), ("makalu_gray", "마칼루 그레이", "#5a5c5f"),
+            ("ceres_blue", "세레스 블루", "#22344f"), ("blazing_red", "블레이징 레드", "#a1202a"),
+            ("hallasan_green", "한라산 그린", "#2e4a3c")],
+    "niro": [("snow_white", "스노우 화이트 펄", "#f5f5f5"), ("aurora_black", "오로라 블랙 펄", "#131313"),
+             ("interstellar_gray", "인터스텔라 그레이", "#54565a"), ("steel_gray", "스틸 그레이", "#7a7e82"),
+             ("mineral_blue", "미네랄 블루", "#3a5a7a"), ("cityscape_green", "시티스케이프 그린", "#3f4a3f"),
+             ("ivory_silver", "아이보리 실버", "#d8d3c5")],
+    "benz_c": [("opalite_white", "오팔라이트 화이트", "#f1f1f1"), ("obsidian_black", "옵시디언 블랙", "#101012"),
+               ("high_tech_silver", "하이테크 실버", "#bfc2c5"), ("selenite_gray", "셀레나이트 그레이 메탈릭", "#5f6165"),
+               ("sodalite_blue", "소달라이트 블루", "#1f3a66"), ("patagonia_red", "파타고니아 레드", "#8a1f2a"),
+               ("graphite_gray", "그래파이트 그레이 메탈릭", "#3f4144")],
+}
+
+
 def _car(id, brand, model, segment, price, tagline, desc, q1, q2, q3):
     return {"id": id, "brand": brand, "model": model, "segment": segment, "price": price,
-            "tagline": tagline, "desc": desc, "colors": _generic_colors(),
+            "tagline": tagline, "desc": desc,
+            "colors": ([{"id": i, "name": n, "hex": h} for i, n, h in EXTRA_CAR_COLORS[id]]
+                       if id in EXTRA_CAR_COLORS else _generic_colors()),
             "scores": {"q1": q1, "q2": q2, "q3": q3}}
 
 

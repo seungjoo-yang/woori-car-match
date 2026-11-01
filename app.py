@@ -481,7 +481,11 @@ def scroll_to_top_on_page_change():
             "try{window.parent.parent.scrollTo(0,0);}catch(e){}}catch(e){}}"
             "up();setTimeout(up,120);setTimeout(up,400);setTimeout(up,900);"
         )
-        components.html(f"<!-- nav {st.session_state['_scroll_nonce']} --><script>{script}</script>", height=0)
+        page = f"<!-- nav {st.session_state['_scroll_nonce']} --><script>{script}</script>"
+        if hasattr(st, "iframe"):   # components.v1.html 은 제거 예정이라 최신 Streamlit 에서는 st.iframe 을 쓴다
+            st.iframe(page, height=1)
+        else:
+            components.html(page, height=0)
 
 
 def topbar():
