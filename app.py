@@ -135,10 +135,10 @@ header[data-testid="stHeader"],#MainMenu,footer,[data-testid="stToolbar"],[data-
 .dc-chip.now{background:var(--accent-soft);color:var(--accent-strong);box-shadow:inset 0 0 0 1.5px var(--accent);}
 
 /* 이동 가능한 STEP 탭 (모바일에서도 한 줄 유지) */
-.st-key-dcsteps{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:6px;margin-bottom:22px;box-shadow:var(--shadow);}
-.st-key-dcsteps [data-testid="stHorizontalBlock"]{flex-wrap:nowrap!important;gap:6px!important;}
-.st-key-dcsteps [data-testid="stColumn"]{min-width:0!important;flex:1 1 0!important;width:auto!important;}
-.st-key-dcsteps [data-testid="stMarkdownContainer"],.st-key-dcsteps [data-testid="stMarkdown"]{margin-bottom:0!important;}
+[class*="st-key-dcsteps"]{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:6px;margin-bottom:22px;box-shadow:var(--shadow);}
+[class*="st-key-dcsteps"] [data-testid="stHorizontalBlock"]{flex-wrap:nowrap!important;gap:6px!important;}
+[class*="st-key-dcsteps"] [data-testid="stColumn"]{min-width:0!important;flex:1 1 0!important;width:auto!important;}
+[class*="st-key-dcsteps"] [data-testid="stMarkdownContainer"],[class*="st-key-dcsteps"] [data-testid="stMarkdown"]{margin-bottom:0!important;}
 [class*="st-key-card_nav"]{margin-bottom:0!important;}
 .dc-chip .sh{display:none;}
 .dc-chip.done{cursor:pointer;transition:all .15s ease;}
@@ -301,6 +301,8 @@ div[data-testid="stRadio"] label[data-testid="stRadioOption"]>div>div>div:first-
 div[data-testid="stRadio"] label[data-testid="stRadioOption"] p{font-weight:700;color:var(--text-muted);font-size:.92rem;text-align:center;}
 div[data-testid="stRadio"] label[data-testid="stRadioOption"][data-selected="true"]{background:var(--accent-soft);box-shadow:inset 0 0 0 1.5px var(--accent);}
 div[data-testid="stRadio"] label[data-testid="stRadioOption"][data-selected="true"] p{color:var(--accent-strong);font-weight:800;}
+[class*="st-key-w_color_"] label[data-testid="stRadioOption"]{display:flex!important;align-items:center;gap:8px;}
+[class*="st-key-w_color_"] label[data-testid="stRadioOption"]::before{content:"";flex:none;width:16px;height:16px;border-radius:50%;border:1px solid rgba(20,33,58,.3);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);}
 
 /* 실시간 데이터 / 추천 이유 / 확장 후보 */
 .dc-live{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;background:var(--surface);border:1px solid var(--border);
@@ -397,7 +399,7 @@ div[data-testid="stForm"]{background:var(--surface);border:1px solid var(--borde
 @media (max-width:640px){
   .dc-chip .fl{display:none;} .dc-chip .sh{display:block;}
   .dc-chip{padding:8px 2px;} .dc-chip b{font-size:.66rem;letter-spacing:.02em;} .dc-chip span{font-size:.72rem;margin-top:1px;}
-  .st-key-dcsteps{padding:4px;} .st-key-dcsteps [data-testid="stHorizontalBlock"]{gap:4px!important;}
+  [class*="st-key-dcsteps"]{padding:4px;} [class*="st-key-dcsteps"] [data-testid="stHorizontalBlock"]{gap:4px!important;}
   .st-key-top5row [data-testid="stColumn"]{flex:0 0 76%!important;min-width:76%!important;}
   .st-key-cmprow [data-testid="stHorizontalBlock"]{flex-wrap:nowrap!important;gap:8px!important;}
   .st-key-cmprow [data-testid="stColumn"]{min-width:0!important;flex:1 1 0!important;}
@@ -473,6 +475,7 @@ def trade_in_price() -> int:
 # ---------------------------------------------------------------------------
 def scroll_to_top_on_page_change():
     """단계(또는 질문)가 바뀌면 화면을 맨 위로 올린다. 바뀌지 않은 재실행(선택 변경 등)에서는 위치를 유지한다."""
+    slot = st.empty()   # 매 실행마다 같은 자리를 차지한다 (화면 전환 때만 요소가 끼어들어 위치가 밀리는 것을 막는다)
     page_key = (st.session_state.step, st.session_state.q_sub)
     if st.session_state.get("_last_page") != page_key:
         st.session_state["_last_page"] = page_key
@@ -488,9 +491,10 @@ def scroll_to_top_on_page_change():
         )
         page = f"<!-- nav {st.session_state['_scroll_nonce']} --><script>{script}</script>"
         if hasattr(st, "iframe"):   # components.v1.html 은 제거 예정이라 최신 Streamlit 에서는 st.iframe 을 쓴다
-            st.iframe(page, height=1)
+            slot.iframe(page, height=1)
         else:
-            components.html(page, height=0)
+            with slot:
+                components.html(page, height=0)
 
 
 def topbar():
@@ -538,7 +542,7 @@ def step_chips(step_idx: int):
         st.markdown('<div class="dc-steps">' + "".join(chip_html(i, a, "") for i, a in enumerate(app_steps)) + "</div>",
                     unsafe_allow_html=True)
         return
-    with st.container(key="dcsteps"):
+    with st.container(key=f"dcsteps_{step_idx}"):
         cols = st.columns(len(app_steps))
         for i, a in enumerate(app_steps):
             with cols[i]:
@@ -1192,10 +1196,13 @@ def render_detail():
 
     colors = car["colors"]
     st.markdown('<div class="dc-lbl">색상</div>', unsafe_allow_html=True)
-    st.markdown("".join(f'<span class="dc-swatch"><i style="background:{c["hex"]}"></i>{c["name"]}</span>'
-                        for c in colors), unsafe_allow_html=True)
     if st.session_state.selected_color_idx >= len(colors):
         st.session_state.selected_color_idx = 0
+    # 색 점과 이름이 한 버튼으로 보이도록, 선택 버튼(라디오)마다 해당 색의 점을 앞에 붙인다
+    dots = "".join(
+        f'[class*="st-key-w_color_{car["id"]}"] label[data-testid="stRadioOption"]:nth-of-type({i + 1})::before'
+        f'{{background:{c["hex"]};}}' for i, c in enumerate(colors))
+    st.markdown(f"<style>{dots}</style>", unsafe_allow_html=True)
     cidx = seg(list(range(len(colors))), "selected_color_idx", f"w_color_{car['id']}",
                fmt=lambda i: colors[i]["name"], label="색상 선택")
     color = colors[cidx]
