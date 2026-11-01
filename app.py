@@ -196,6 +196,8 @@ p.dc-note{color:var(--text-subtle);font-size:.82rem;margin:4px 0 0;}
 .dc-lbl{font-weight:800;font-size:.92rem;color:var(--text);margin:14px 0 6px;}
 .dc-finex{margin:12px 2px 4px;padding:2px 0 2px 12px;border-left:3px solid #bcd3e6;color:var(--text-subtle);font-size:.84rem;line-height:1.6;}
 .dc-finex b{color:var(--text-muted);font-weight:800;}
+.dc-consent{font-size:.84rem;line-height:1.6;color:var(--text-muted);margin:0 0 10px;}
+.dc-consent b{color:var(--text);}
 .dc-finex span{display:block;margin-top:2px;}
 .dc-sec{margin:26px 0 4px;}
 .dc-dots{display:flex;gap:6px;margin:4px 0 12px;}
@@ -864,6 +866,7 @@ def send_consultation_email(payload: dict):
 
     lines = [
         f"신청자: {payload['name']} ({payload['phone']})",
+        f"개인정보 수집·이용 동의: 동의함 ({payload.get('consent_at', '-')})",
         "",
         f"관심 차량: {payload['car_brand']} {payload['car_model']} - {payload['color_name']}",
         f"트림: {payload['trim_name']} / 휠: {payload['wheel_name']}",
@@ -1230,13 +1233,21 @@ def render_detail():
     with st.form("consult_form", clear_on_submit=True):
         name = st.text_input("이름")
         phone = st.text_input("연락처 (휴대폰 번호)", placeholder="010-0000-0000")
-        submitted = st.form_submit_button("상담 신청하기", type="primary", use_container_width=True)
+        with st.expander(f"{data.PRIVACY_CONSENT_TITLE} 보기"):
+            st.markdown("".join(f'<div class="dc-consent"><b>{i}. {t}</b><br>{b}</div>'
+                                for i, (t, b) in enumerate(data.PRIVACY_CONSENT, 1))
+                        + f'<p class="dc-note">{data.PRIVACY_CONSENT_NOTE}</p>', unsafe_allow_html=True)
+        agreed = st.checkbox("[필수] 개인정보 수집·이용에 동의합니다.")
+        submitted = st.form_submit_button("동의하고 상담 신청하기", type="primary", use_container_width=True)
         if submitted:
             if not name.strip() or not phone.strip():
                 st.warning("이름과 연락처를 입력해 주세요.")
+            elif not agreed:
+                st.warning("상담을 신청하려면 개인정보 수집·이용에 동의해 주세요.")
             else:
                 payload = {
                     "name": name.strip(), "phone": phone.strip(),
+                    "consent_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
                     "car_brand": car["brand"], "car_model": car["model"], "color_name": color["name"],
                     "trim_name": trim["name"], "wheel_name": wheel["name"],
                     "finance_name": finance_name(), "term": q["term"],
